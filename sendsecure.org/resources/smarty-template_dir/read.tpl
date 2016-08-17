@@ -1,6 +1,6 @@
 <html>
 	<head>
-		<link rel="stylesheet" type="text/css" href="read.css">
+		<link rel="stylesheet" type="text/css" href="{$css}">
 		<script src='moment.min.js'></script>
 		<script src='read.js'></script>
 	</head>

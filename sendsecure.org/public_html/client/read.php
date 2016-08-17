@@ -63,6 +63,12 @@ $date = $emailArr['datetime'];
 $date = strtotime($date);
 $date = date(RFC2822, $date);
 
+if (strpos($_SERVER['HTTP_USER_AGENT'], 'Mobi') !== false) {
+	$css = 'reply.mobile.css';
+} else {
+	$css = 'reply.desktop.css';
+}
+
 $smarty->assign('id', $_GET['id']);
 $smarty->assign('index', $_GET['index']);
 $smarty->assign('key', $_GET['key']);
@@ -71,6 +77,7 @@ $smarty->assign('attachments', $attachments);
 $smarty->assign('from', $from);
 $smarty->assign('date', $date);
 $smarty->assign('to', $to);
+$smarty->assign('css', $css);
 $smarty->assign('replyTo', $replyTo);
 $smarty->assign('cc', $cc);
 $smarty->assign('message', $message);

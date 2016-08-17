@@ -1,30 +1,38 @@
-KindEditor.ready(function(K) {
-	window.editor = K.create('#kind-editor', {
-		width : '100%',
-		height : '500px',
-		resizeType : '0',
-		newlineTag : 'br',
-		afterUpload : function(url) { alert(url) },
-		items : [
-			'undo', 'redo', '|', 'cut', 'copy', 'plainpaste', 'wordpaste', '|', 'justifyleft', 'justifycenter', 'justifyright', 'justifyfull', 'insertorderedlist', 'insertunorderedlist', 'indent', 'outdent', '|', 'pagebreak', '/',
-			'formatblock', 'fontname', 'fontsize', '|', 'forecolor', 'hilitecolor', 'bold', 'italic', 'underline', 'strikethrough', 'lineheight', 'removeformat', '|', 'table', 'hr', 'emoticons', 'link', 'unlink'
-		]
-	})
-	window.editor.focus();
-	window.editor.html(document.getElementById('message').value);
-});
+var quill = null;
+document.addEventListener('DOMContentLoaded', function() {
+	var toolbarOptions = [
+		[{ 'font': [] }],
+		[{ 'size': ['small', false, 'large', 'huge'] }],	// custom dropdown
+		['bold', 'italic', 'underline', 'strike'],				// toggled buttons
+		[{ 'color': [] }, { 'background': [] }],					// dropdown with defaults from theme
+		[{ 'list': 'ordered'}, { 'list': 'bullet' }],
+		[{ 'align': [] }],
+		['blockquote'],
+		[{ 'indent': '-1'}, { 'indent': '+1' }],					// outdent/indent
+		['link'],
+		['clean']														// remove formatting button
+	];
 
-function print1(){
-	i = document.getElementsByClassName('ke-toolbar');
-	s = i[0].style.display;
-	i[0].style.display = 'none';
-	window.print();
-	i[0].style.display = '';
-}
+	quill = new Quill('#editor', {
+		modules: {
+			'toolbar': toolbarOptions
+		},
+		theme: 'snow'
+	});
+
+	quill.focus();
+	
+} , false);
+
+
+document.addEventListener('DOMContentLoaded', function() {
+	document.getElementById('remove-attach').style.display = 'none';
+	document.getElementById('attachments').style.display = 'none';
+} , false);
 
 function addAttach(){
-	document.getElementById('remove-attach').style.display = 'inline';
-	document.getElementById('attachments').style.display = 'inline';
+	document.getElementById('remove-attach').style.display = '';
+	document.getElementById('attachments').style.display = '';
 	node = document.createElement('input');
 	node.type = 'file';
 	node.name = Date.now();
@@ -53,12 +61,13 @@ function send(){
 	node = document.createElement('input');
 	node.type = 'hidden';
 	node.name = 'message';
-	node.value = htmlspecialchars(window.editor.html());
+	console.log(document.getElementById('editor').firstChild.innerHTML);
+	node.value = htmlspecialchars(document.getElementById('editor').innerHTMLasda);
 	document.forms[0].appendChild(node);
 	document.forms[0].submit();
 }
 
-function htmlspecialchars(text) {
+function htmlspecialchars(inputText) {
 	var map = {
 		'&': '&amp;',
 		'<': '&lt;',
@@ -66,25 +75,18 @@ function htmlspecialchars(text) {
 		'"': '&quot;',
 		"'": '&#039;'
 	};
-	return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+	return inputText.replace(/[&<>"']/g, function(m) { return map[m]; });
 }
 
 // a callback when the file attachment is selected
 function changedAttach(node){
 	// convert filepath to filename
 	file = node.value.split(/(\\|\/)/g).pop();
-
-	// if there are already elements in 'attach-names'
-	if(document.getElementById('attach-names').firstChild) {
-		file = " | " + file;
-	} else {
-		file = file;
-	}
 	
-	span = document.createElement('span');
-	span.style.whiteSpace = 'pre';
-	span.innerText = file;
-	document.getElementById('attach-names').appendChild(span);
+	div = document.createElement('div');
+	div.style.whiteSpace = 'pre';
+	div.innerText = file;
+	document.getElementById('attach-names').appendChild(div);
 }
 
 document.addEventListener('DOMContentLoaded', fixDate, false);
@@ -97,12 +99,5 @@ function fixDate(){
 	d = div.querySelector("#oldMsg").querySelector("#then");
 	d.innerText = moment(Date.parse(d.innerText)).format('ddd, MMM DD, YYYY [at] h:mm A');
 	document.getElementById('message').value = div.innerHTML;
-	window.editor.html(document.getElementById('message').value); // update the textbox with the corrected info
-}
-
-var mq = window.matchMedia( "(max-width: 900px)" );
-if (mq.matches) {
-	alert("true");
-} else {
-	alert("false");
+	quill.pasteHTML(0, document.getElementById('message').value);
 }

@@ -1,0 +1,56 @@
+.mailHead {
+	font-family: 'Lucida Sans Unicode','Lucida Grande', Verdana, Arial, Sans-Serif;
+	font-size: 13px;
+	background-color: rgb(244,244,244);
+	border: 1px solid lightgrey;
+	width: 80%;
+	margin: auto;
+}
+
+.mailHead span {
+	display: inline-block;
+}
+.mailHead .vars {
+	vertical-align: top;
+	display: inline-block;
+	width: 100px;
+	font-weight: bold;
+	margin-left: 100px;
+	color: rgb(153,153,153);
+}
+.mailHead p {
+	margin: 2px;
+}
+.mailBody {
+	border: 1px solid lightgrey;
+	width: 80%;
+	margin: auto;
+	margin-top: 15px;
+}
+.mailBody .mailMessage {
+	display: inline-block;
+	max-width: 98%;
+	word-wrap: break-word;
+	padding-left: 1%;
+	padding-right: 1%;
+}
+
+pre {
+	white-space: pre-wrap;
+	word-wrap: break-word;
+}
+
+@media print {
+	.mailHead .vars {
+		margin-left: 50px;
+	}
+	.mailHead {
+		width: 100%;
+	}
+	.mailHead .options {
+		display: none;
+	}
+	.mailBody {
+		width: 100%;
+	}
+}

@@ -68,7 +68,11 @@ $oldMessage = 'On ' . '<span id="then">' . date(RFC2822, strtotime($emailArr['da
 $oldMessage = '<span id="oldMsg" style="color:#666666;line-height:1;">' . $oldMessage . '</span>';
 $oldMessage = htmlspecialchars($oldMessage);
 
-
+if (strpos($_SERVER['HTTP_USER_AGENT'], 'Mobi') !== false) {
+	$css = 'reply.mobile.css';
+} else {
+	$css = 'reply.desktop.css';
+}
 
 
 $message = '<br /><br />';
@@ -83,6 +87,7 @@ $smarty->assign('from', addressListHTML($from));
 $smarty->assign('date', $date);
 $smarty->assign('to', $to);
 $smarty->assign('cc', $cc);
+$smarty->assign('css', $css);
 $smarty->assign('message', $message);
 $smarty->display('reply.tpl');
 ?>
