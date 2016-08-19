@@ -1,6 +1,6 @@
 import sys
-sys.path.append('/opt/sendsecure/secure-smtpd-3.0.0')
-from secure_smtpd import SMTPServer	# this is imported from above
+from auth_smtpd import SMTPServer
+
 from subprocess import Popen, PIPE, STDOUT
 from requests import post
 from http.client import HTTPSConnection
@@ -60,12 +60,10 @@ class authSMTP():
 
 
 authSmtpServer = authSMTP.server(
-	('127.0.0.1', 2525),
-	None,
-	require_authentication=True,
-	data_size_limit=35650000,
-	ssl=False,
-	credential_validator=authSMTP.credentialManager(),
+	localaddr = ('127.0.0.1', 2525),
+	remoteaddr = None,
+	credential_validator = authSMTP.credentialManager(),
+	data_size_limit = 35650000
 	)
 
 authSmtpServer.run()
