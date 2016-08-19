@@ -1,9 +1,0 @@
-build
-dist
-config/environment.json
-*.swp
-*.pyc
-*.egg
-*.coverage
-*.egg-info
-*.DS_Store
