@@ -3,27 +3,38 @@
 	font-size: 13px;
 	background-color: rgb(244,244,244);
 	border: 1px solid lightgrey;
-	width: 80%;
+	width: 98%;
 	margin: auto;
 }
 
 .mailHead span {
 	display: inline-block;
 }
+
+.options span {
+	display: block;
+	margin-bottom: 10px;
+}
+
+.mailHead p span {
+	margin-left: 5px;
+}
+
 .mailHead .vars {
 	vertical-align: top;
-	display: inline-block;
+	display: block;
 	width: 100px;
 	font-weight: bold;
-	margin-left: 100px;
+	margin-left: 5px;
 	color: rgb(153,153,153);
 }
 .mailHead p {
 	margin: 2px;
+	margin-bottom: 10px;
 }
 .mailBody {
 	border: 1px solid lightgrey;
-	width: 80%;
+	width: 98%;
 	margin: auto;
 	margin-top: 15px;
 }

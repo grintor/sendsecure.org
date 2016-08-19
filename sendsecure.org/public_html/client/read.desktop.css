@@ -21,6 +21,22 @@
 .mailHead p {
 	margin: 2px;
 }
+
+.options span + span::before {
+	content: "|";
+	padding-right: 5px;
+}
+
+.options span:nth-child(1)::before {
+	content: none;
+	padding-right: 0px;
+}
+
+.options span:nth-child(2)::before {
+	content: none;
+	padding-right: 0px;
+}
+
 .mailBody {
 	border: 1px solid lightgrey;
 	width: 80%;
@@ -38,6 +54,14 @@
 pre {
 	white-space: pre-wrap;
 	word-wrap: break-word;
+}
+
+.options{
+	overflow: auto; /* workaround to stop .options span { float: left; } from breaking everything */
+}
+
+.options span {
+	float: left;
 }
 
 @media print {

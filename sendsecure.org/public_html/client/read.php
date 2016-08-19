@@ -64,9 +64,9 @@ $date = strtotime($date);
 $date = date(RFC2822, $date);
 
 if (strpos($_SERVER['HTTP_USER_AGENT'], 'Mobi') !== false) {
-	$css = 'reply.mobile.css';
+	$css = 'read.mobile.css';
 } else {
-	$css = 'reply.desktop.css';
+	$css = 'read.desktop.css';
 }
 
 $smarty->assign('id', $_GET['id']);

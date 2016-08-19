@@ -7,6 +7,10 @@
 	margin: auto;
 }
 
+#editor-print {
+	display: none;
+}
+
 .mailHead span {
 	display: inline-block;
 }
@@ -22,6 +26,31 @@
 	margin: 2px;
 }
 
+.options span + span::before {
+	content: " | ";
+}
+
+.options span:nth-child(1)::before {
+	content: "";
+}
+
+.options span:nth-child(2)::before {
+	content: "";
+}
+
+#attach-names div {
+	display: inline-block;
+}
+
+#attach-names div + div::before {
+	content: " | ";
+}
+
+#attach-names div:nth-child(1)::before {
+	content: "";
+}
+
+/* replaced with neat stuff from above
 #print-page::after { 
     content: " | ";
 }
@@ -33,7 +62,7 @@
 #remove-attach::after { 
     content: " | ";
 }
-
+ */
 .mailBody {
 	border: 1px solid lightgrey;
 	width: 80%;
@@ -54,6 +83,21 @@ pre {
 }
 
 @media print {
+	
+	#editor {
+		display: none;
+	}
+	
+	#editor-print {
+		display: block;
+		word-wrap: break-word;
+	}
+	
+	#editor-print p {
+		padding-left: 1%;
+		padding-right: 1%;
+	}
+	
 	.mailHead .vars {
 		margin-left: 30px;
 	}

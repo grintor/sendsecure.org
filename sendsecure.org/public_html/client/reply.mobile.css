@@ -7,6 +7,10 @@
 	margin: auto;
 }
 
+#editor-print {
+	display: none;
+}
+
 .mailHead span {
 	display: inline-block;
 }
@@ -22,6 +26,7 @@
 	display: block;
 	margin-bottom: 10px;
 }
+
 .mailHead p span {
 	margin-left: 5px;
 }
@@ -51,6 +56,21 @@ pre {
 }
 
 @media print {
+
+	#editor {
+		display: none;
+	}
+	
+	#editor-print {
+		display: block;
+		word-wrap: break-word;
+	}
+	
+	#editor-print p {
+		padding-left: 1%;
+		padding-right: 1%;
+	}
+	
 	.mailHead .vars {
 		margin-left: 50px;
 	}

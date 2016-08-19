@@ -35,6 +35,7 @@
 	
 		<!-- Create the editor container -->
 		<div id="editor"></div>
+		<div id="editor-print"></div>
 	</div>
 </body>
 </html>

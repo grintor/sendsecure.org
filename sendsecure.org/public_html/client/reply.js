@@ -22,8 +22,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
 	quill.focus();
 	
+	quill.on('text-change', function() {
+		document.getElementById('editor-print').innerHTML = document.getElementById('editor').firstChild.innerHTML
+	})
+	
 } , false);
-
 
 document.addEventListener('DOMContentLoaded', function() {
 	document.getElementById('remove-attach').style.display = 'none';
@@ -62,7 +65,7 @@ function send(){
 	node.type = 'hidden';
 	node.name = 'message';
 	console.log(document.getElementById('editor').firstChild.innerHTML);
-	node.value = htmlspecialchars(document.getElementById('editor').innerHTMLasda);
+	node.value = htmlspecialchars(document.getElementById('editor').innerHTML);
 	document.forms[0].appendChild(node);
 	document.forms[0].submit();
 }
