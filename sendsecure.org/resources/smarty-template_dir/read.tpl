@@ -14,13 +14,13 @@
 			{$replyTo}
 			{$cc}
 			{$attachments}
-			<p class='options'><span class = 'vars'>Options:</span>
+			<p class='options'><span class = 'vars'>Options:</span>{strip}
 				<span><a href="#" onclick="window.print();">Print this page</a></span>
 				<span><a href="#" onclick="window.print();">View Message Details</a></span>
 				<span><a href="#" onclick="window.print();">Forward</a></span>
 				<span><a href="reply.php?id={$id}&key={$key}&index={$index}&reply=one" >Reply</a></span>
 				<span><a href="reply.php?id={$id}&key={$key}&index={$index}&reply=all" >Reply To All</a></span>
-			</p>
+			{/strip}</p>
 		</div>
 		<div class = 'mailBody'>
 			<span class = "mailMessage">{$message}</span>
