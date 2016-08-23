@@ -5,40 +5,38 @@ import collections
 import socket
 import time
 import base64
-from email._header_value_parser import get_addr_spec, get_angle_addr
 from asyncore import ExitNow
 import signal
-from multiprocessing import Process, Queue
+from multiprocessing import Process
 import sys
+import traceback
+from warnings import warn
 
-__welcome__ = 'Thanks for us choosing to SendSecure!'
+__version__ = 'Thanks for us choosing to SendSecure!'
 
+#edited
+class Devnull:
+	def write(self, msg):
+		#return
+		sys.stderr.write(msg)
+	def flush(self):
+		#return
+		sys.stderr.flush(self)
 
-class SMTPChannel(smtpd.SMTPChannel):
+DEBUGSTREAM = Devnull()
+
+class SMTPChannel(smtpd.SMTPChannel): #edited
 	COMMAND = 0
 	DATA = 1
 
 	command_size_limit = 512
 	command_size_limits = collections.defaultdict(lambda x=command_size_limit: x)
-	command_size_limits.update({
-		'MAIL': command_size_limit + 26,
-		})
-	max_command_size_limit = max(command_size_limits.values())
 
-	def __init__(self, server, conn, addr, credential_validator, data_size_limit=smtpd.DATA_SIZE_DEFAULT, map=None):
+	def __init__(self, server, conn, addr, credential_validator, data_size_limit=smtpd.DATA_SIZE_DEFAULT, map=None, enable_SMTPUTF8=False, decode_data=None): #edited
 		asynchat.async_chat.__init__(self, conn, map=map)
 		self.smtp_server = server
 		self.conn = conn
 		self.addr = addr
-		self.data_size_limit = data_size_limit
-		self.received_lines = []
-		self.smtp_state = self.COMMAND
-		self.seen_greeting = ''
-		self.mailfrom = None
-		self.rcpttos = []
-		self.received_data = ''
-		self.fqdn = socket.getfqdn()
-		self.num_bytes = 0
 		#added
 		self.credential_validator = credential_validator
 		self.authenticating = False
@@ -46,33 +44,60 @@ class SMTPChannel(smtpd.SMTPChannel):
 		self.username = None
 		self.password = None
 		# /added
+		self.data_size_limit = data_size_limit
+		self.enable_SMTPUTF8 = enable_SMTPUTF8
+		if enable_SMTPUTF8:
+			if decode_data:
+				raise ValueError("decode_data and enable_SMTPUTF8 cannot"
+								 " be set to True at the same time")
+			decode_data = False
+		if decode_data is None:
+			warn("The decode_data default of True will change to False in 3.6;"
+				 " specify an explicit value for this keyword",
+				 DeprecationWarning, 2)
+			decode_data = True
+		self._decode_data = decode_data
+		if decode_data:
+			self._emptystring = ''
+			self._linesep = '\r\n'
+			self._dotsep = '.'
+			self._newline = smtpd.NEWLINE #edited
+		else:
+			self._emptystring = b''
+			self._linesep = b'\r\n'
+			self._dotsep = ord(b'.')
+			self._newline = b'\n'
+		self._set_rset_state()
+		self.seen_greeting = ''
+		self.extended_smtp = False
+		self.command_size_limits.clear()
+		self.fqdn = socket.getfqdn()
 		try:
 			self.peer = conn.getpeername()
 		except OSError as err:
 			# a race condition	may occur if the other end is closing
 			# before we can get the peername
-			print('_accept_subprocess(): uncaught exception: %s' % str(e))
-			raise ExitNow()
-
+			self.close()
 			if err.args[0] != errno.ENOTCONN:
 				raise
+			raise ExitNow() #added
 			return
-		#print('Peer:', repr(self.peer))
-		self.push('220 %s %s' % (self.fqdn, __welcome__))
-		self.set_terminator(b'\r\n')
-		self.extended_smtp = False
+		print('Peer:', repr(self.peer), file=DEBUGSTREAM)
+		self.push('220 %s %s' % (self.fqdn, __version__))
+
 
 	# Implementation of base class abstract method
 	def found_terminator(self):
-		line = smtpd.EMPTYSTRING.join(self.received_lines)
-		#print('Data:', repr(line))
+		line = self._emptystring.join(self.received_lines)
+		print('Data:', repr(line), file=DEBUGSTREAM)
 		self.received_lines = []
 		if self.smtp_state == self.COMMAND:
 			sz, self.num_bytes = self.num_bytes, 0
 			if not line:
 				self.push('500 Error: bad syntax')
 				return
-			method = None
+			if not self._decode_data:
+				line = str(line, 'utf-8')
 			i = line.find(' ')
 			# added
 			if self.authenticating:
@@ -81,7 +106,7 @@ class SMTPChannel(smtpd.SMTPChannel):
 				arg = line.strip()
 				command = 'AUTH'
 			# /added
-			elif i < 0: # changed from 'if'
+			elif i < 0: #edited
 				command = line.upper()
 				arg = None
 			else:
@@ -117,45 +142,61 @@ class SMTPChannel(smtpd.SMTPChannel):
 			# Remove extraneous carriage returns and de-transparency according
 			# to RFC 5321, Section 4.5.2.
 			data = []
-			for text in line.split('\r\n'):
-				if text and text[0] == '.':
+			for text in line.split(self._linesep):
+				if text and text[0] == self._dotsep:
 					data.append(text[1:])
 				else:
 					data.append(text)
-			self.received_data = smtpd.NEWLINE.join(data)
-			status = self.smtp_server.process_message(self.peer,
-													  self.mailfrom,
-													  self.rcpttos,
-													  self.received_data)
-			self.rcpttos = []
-			self.mailfrom = None
-			self.smtp_state = self.COMMAND
-			self.num_bytes = 0
-			self.set_terminator(b'\r\n')
+			self.received_data = self._newline.join(data)
+			args = (self.peer, self.mailfrom, self.rcpttos, self.received_data)
+			kwargs = {}
+			if not self._decode_data:
+				kwargs = {
+					'mail_options': self.mail_options,
+					'rcpt_options': self.rcpt_options,
+				}
+			status = self.smtp_server.process_message(*args, **kwargs)
+			self._set_post_data_state()
 			if not status:
 				self.push('250 OK')
 			else:
 				self.push(status)
 
-	# SMTP and ESMTP commands
+	#edited
 	def smtp_HELO(self, arg):
 		self.push('501 Syntax: EHLO hostname')
+		return
 
 	def smtp_EHLO(self, arg):
 		if not arg:
 			self.push('501 Syntax: EHLO hostname')
 			return
+		# See issue #21783 for a discussion of this behavior.
 		if self.seen_greeting:
 			self.push('503 Duplicate HELO/EHLO')
-		else:
-			self.seen_greeting = arg
-			self.extended_smtp = True
-			self.push('250-%s' % self.fqdn)
-			if self.data_size_limit:
-				self.push('250-SIZE %s' % self.data_size_limit)
-				self.push('250-AUTH LOGIN PLAIN')
-				self.push('250 HELP')
-				
+			return
+		self._set_rset_state()
+		self.seen_greeting = arg
+		self.extended_smtp = True
+		self.push('250-%s' % self.fqdn)
+		if self.data_size_limit:
+			self.push('250-SIZE %s' % self.data_size_limit)
+			self.command_size_limits['MAIL'] += 26
+		if not self._decode_data:
+			self.push('250-8BITMIME')
+		if self.enable_SMTPUTF8:
+			self.push('250-SMTPUTF8')
+			self.command_size_limits['MAIL'] += 10
+		self.push('250-AUTH LOGIN PLAIN') #added
+		self.push('250 HELP')
+
+	def smtp_QUIT(self, arg):
+		# args is ignored
+		self.push('221 Bye')
+		self.close_when_done()
+		raise ExitNow() # added
+
+	#added
 	def smtp_AUTH(self, arg):
 
 		def decode_b64(data):
@@ -168,19 +209,19 @@ class SMTPChannel(smtpd.SMTPChannel):
 			return base64.b64encode(data.encode('utf-8')).decode('utf-8')
 			
 		if not arg:
-			self.push('500 Error: bad syntax')
+			self.push('500 Error: bad syntax - missing argument')
 			return
 
 		if 'PLAIN' in arg:
 			split_args = arg.split(' ')
-			if not len(split_args)==2: # if there is nothing after PLAIN..or there is more than one thing..
-				self.push('500 Error: bad syntax')
+			if not len(split_args)==2:
+				self.push('500 Error: bad syntax - invalid number of arguments after PLAIN')
 				self.authenticating = False
 				return
 			# second arg is Base64-encoded string of blah\0username\0password... or bad syntax
 			pre_authbits = decode_b64(split_args[1])
 			if not pre_authbits:
-				self.push('500 Error: bad syntax')
+				self.push('500 Error: bad syntax - invalid base64')
 				return
 			authbits = pre_authbits.split('\0')
 			self.username = authbits[1]
@@ -203,7 +244,7 @@ class SMTPChannel(smtpd.SMTPChannel):
 			if len(split_args) == 2:
 				self.username = decode_b64(arg.split(' ')[1])
 				if not self.username:
-					self.push('500 Error: bad syntax')
+					self.push('500 Error: bad syntax - invalid base64')
 					self.authenticating = False
 					return
 				self.push('334 ' + encode_b64('Username'))
@@ -213,7 +254,7 @@ class SMTPChannel(smtpd.SMTPChannel):
 		elif not self.username:
 			self.username = decode_b64(arg)
 			if not self.username:
-				self.push('500 Error: bad syntax')
+				self.push('500 Error: bad syntax - invalid base64')
 				self.authenticating = False
 				return
 			self.push('334 ' + encode_b64('Password'))
@@ -227,53 +268,60 @@ class SMTPChannel(smtpd.SMTPChannel):
 				self.push('454 Temporary authentication failure.')
 				self.close_when_done()
 				raise ExitNow()
-
-	def smtp_QUIT(self, arg):
-		# args is ignored
-		self.push('221 Bye')
-		self.close_when_done()
-		raise ExitNow()
-
-class SMTPServer(smtpd.SMTPServer):
 	
-	def __init__(self, localaddr, remoteaddr, credential_validator, data_size_limit=smtpd.DATA_SIZE_DEFAULT, map=None):
+
+class SMTPServer(smtpd.SMTPServer): #edited
+	# SMTPChannel class to use for managing client connections
+	channel_class = SMTPChannel
+
+	def __init__(self, localaddr, remoteaddr, credential_validator, data_size_limit=smtpd.DATA_SIZE_DEFAULT, map=None, enable_SMTPUTF8=False, decode_data=None): #edited
 		self._localaddr = localaddr
 		self._remoteaddr = remoteaddr
+		self.credential_validator = credential_validator #added
 		self.data_size_limit = data_size_limit
-		self.credential_validator = credential_validator
+		self.enable_SMTPUTF8 = enable_SMTPUTF8
+		if enable_SMTPUTF8:
+			if decode_data:
+				raise ValueError("The decode_data and enable_SMTPUTF8"
+								 " parameters cannot be set to True at the"
+								 " same time.")
+			decode_data = False
+		if decode_data is None:
+			warn("The decode_data default of True will change to False in 3.6;"
+				 " specify an explicit value for this keyword",
+				 DeprecationWarning, 2)
+			decode_data = True
+		self._decode_data = decode_data
 		asyncore.dispatcher.__init__(self, map=map)
 		try:
-			self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
+			gai_results = socket.getaddrinfo(*localaddr,
+											 type=socket.SOCK_STREAM)
+			self.create_socket(gai_results[0][0], gai_results[0][1])
 			# try to re-use a server port if possible
 			self.set_reuse_addr()
 			self.bind(localaddr)
 			self.listen(5)
 		except:
-			#print('_accept_subprocess(): uncaught exception: %s' % str(e))
-			self.shutdown(socket.SHUT_RDWR)
+			traceback.print_exc(file=DEBUGSTREAM) #added
 			self.close()
+			raise ExitNow() # added
+			raise
 		else:
-
 			print('%s started at %s\n\tLocal addr: %s\n\tRemote addr:%s' % (
-				self.__class__.__name__, time.ctime(time.time()), localaddr, remoteaddr))
-				
+				self.__class__.__name__, time.ctime(time.time()),
+				localaddr, remoteaddr), file=DEBUGSTREAM)
+
+	#edited			
 	def handle_accepted(self, conn, addr):
-		#print('Incoming connection from %s' % repr(addr))		
+		print('Incoming connection from %s' % repr(addr), file=DEBUGSTREAM)
+		#added
 		process = Process(target=self._accept_subprocess, args=( conn, addr))
 		process.daemon = True
 		process.start()
-			
-		
-	def run(self):
-		asyncore.loop()
-		if hasattr(signal, 'SIGTERM'):
-			def sig_handler(signal,frame):
-				#print("Got signal %s, shutting down." % signal)
-				sys.exit(0)
-			signal.signal(signal.SIGTERM, sig_handler)
-		while 1:
-			time.sleep(1)
-		
+		#/added
+
+
+	#added
 	def _accept_subprocess(self, newsocket, fromaddr):
 		try:
 			channel = SMTPChannel(
@@ -286,15 +334,28 @@ class SMTPServer(smtpd.SMTPServer):
 			asyncore.loop()
 		except (ExitNow):
 			self._shutdown_socket(newsocket)
-			#print('_accept_subprocess(): smtp channel terminated asyncore.')
+			print('_accept_subprocess(): smtp channel terminated asyncore.', file=DEBUGSTREAM)
 		except Exception as e:
 			self._shutdown_socket(newsocket)
-			#print('_accept_subprocess(): uncaught exception: %s' % str(e))
+			traceback.print_exc(file=DEBUGSTREAM)
+
 			
+	#added
 	def _shutdown_socket(self, s):
 		try:
 			s.shutdown(socket.SHUT_RDWR)
 			s.close()
 		except Exception as e:
-			a=1+1 # placeholder so I can comment out the print
-			#print('_shutdown_socket(): failed to cleanly shutdown socket: %s' % str(e))
+			traceback.print_exc(file=DEBUGSTREAM)
+			
+
+	#added
+	def run(self):
+		asyncore.loop()
+		if hasattr(signal, 'SIGTERM'):
+			def sig_handler(signal,frame):
+				print("Got signal %s, shutting down." % signal, file=DEBUGSTREAM)
+				sys.exit(0)
+			signal.signal(signal.SIGTERM, sig_handler)
+		while 1:
+			time.sleep(1)

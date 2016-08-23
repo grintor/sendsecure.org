@@ -60,7 +60,7 @@ class authSMTP():
 
 
 authSmtpServer = authSMTP.server(
-	localaddr = ('127.0.0.1', 2525),
+	localaddr = ('0.0.0.0', 2525),
 	remoteaddr = None,
 	credential_validator = authSMTP.credentialManager(),
 	data_size_limit = 35650000
