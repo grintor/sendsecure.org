@@ -1,3 +1,6 @@
+import sys
+sys.dont_write_bytecode = True
+
 import smtpd
 import asyncore
 import asynchat
@@ -8,7 +11,6 @@ import base64
 from asyncore import ExitNow
 import signal
 from multiprocessing import Process
-import sys
 import traceback
 from warnings import warn
 

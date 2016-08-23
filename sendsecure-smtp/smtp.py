@@ -1,4 +1,5 @@
 import sys
+sys.dont_write_bytecode = True
 from auth_smtpd import SMTPServer
 
 from subprocess import Popen, PIPE, STDOUT

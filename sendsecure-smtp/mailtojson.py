@@ -4,7 +4,10 @@
 ## (c) 2013 Newsman App
 ## https://github.com/Newsman/MailToJson
 
-import sys, urllib2, email, re, csv, StringIO, base64, json, datetime, pprint
+import sys
+sys.dont_write_bytecode = True
+
+import urllib2, email, re, csv, StringIO, base64, json, datetime, pprint
 from optparse import OptionParser
 
 VERSION = "1.3.1"
