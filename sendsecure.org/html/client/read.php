@@ -2,7 +2,7 @@
 define("RFC2822", "D, d M Y H:i:s O");
 header("content-type: text/html; charset=UTF-8");
 require_once('../../resources/functions.php');
-require_once('../../resources/smarty-3.1.29/Smarty.class.php');
+require_once('../../resources/smarty-3.1.30/Smarty.class.php');
 $smarty = new Smarty;
 $smarty->setCompileDir('/tmp/smarty-templates_c');
 $smarty->setCacheDir('/tmp/smarty-cache');
