@@ -1,6 +1,8 @@
 <?php
 require_once('../../resources/functions.php');
 
+$returnArr = [];
+
 $message_data = json_decode(file_get_contents('php://input'), true);
 
 $uniqid = uniqid('', true);		// this is also the salt (or iv)
@@ -39,8 +41,6 @@ $sqlResult = sqlQuery(sprintf(
 	mysqli_real_escape_string($mysqli, $uniqid)
 ));
 
-print 'mail posted';
-
 $index = 0;
 foreach($message_data['rcpttos'] as $rcptto) {
 	$headers = 'From: "' . $message_data['from'][0]['name'] . '" <do-not-reply@sendsecure.org>';
@@ -50,5 +50,11 @@ foreach($message_data['rcpttos'] as $rcptto) {
 	mail($rcptto, $subject, $message, $headers);
 	$index++;
 }
+
+$returnArr['response']['code'] = 200;
+$returnArr['response']['message'] = 'OK';
+$returnArr['response']['error'] = false;
+print json_encode($returnArr);
+die;
 
 ?>

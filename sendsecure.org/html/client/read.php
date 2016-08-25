@@ -8,8 +8,19 @@ $smarty->setCompileDir('/tmp/smarty-templates_c');
 $smarty->setCacheDir('/tmp/smarty-cache');
 $smarty->setTemplateDir('../../resources/smarty-template_dir');
 
+session_start();
+if ($_SESSION[$_GET['id']] != 'authorized') {
+	header('Location: authorize.php?' . $_SERVER['QUERY_STRING']);
+}
+
 $apiURL = 'https://www.sendsecure.org/APIv1?id=' . $_GET['id'] . '&key=' . $_GET['key'];
-$emailArr = json_decode(file_get_contents($apiURL), true);
+
+$context = stream_context_create(array(
+    'http' => array('ignore_errors' => true),
+));
+$emailArr = json_decode(file_get_contents($apiURL, false, $context), true);
+if ($emailArr['response']['error']) header("Location: error.php?error=" . $result['response']['code']);
+
 
 if(isset($emailArr['message']['html'])){
 	$message = htmlspecialchars_decode($emailArr['message']['html']);
@@ -69,9 +80,7 @@ if (strpos($_SERVER['HTTP_USER_AGENT'], 'Mobi') !== false) {
 	$css = 'read.desktop.css';
 }
 
-$smarty->assign('id', $_GET['id']);
-$smarty->assign('index', $_GET['index']);
-$smarty->assign('key', $_GET['key']);
+$smarty->assign('QUERY_STRING', $_SERVER['QUERY_STRING']);
 $smarty->assign('subject', $emailArr['subject']);
 $smarty->assign('attachments', $attachments);
 $smarty->assign('from', $from);

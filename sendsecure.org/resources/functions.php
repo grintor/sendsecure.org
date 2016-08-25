@@ -21,13 +21,12 @@ function addressListHTML($addressArray, $delimer=',<br />') {
 	return $email;
 }
 
+
 function sqlQuery($query){
 	global $mysqli;
 	if (!$sqlResult = $mysqli->query($query)) {
-		print 'DB query failed';
-		print ': ' . $mysqli->error;
-		print "\nquery: " . $sqlRequest;
-		exit;
+		trigger_error('DB query failed: ' . $mysqli->error . "\nquery: " . $query);
+		return false;
 	} else {
 		return $sqlResult;
 	}
@@ -40,4 +39,16 @@ function removeFromArray($array, $thing, $column) {
 	}
 	return $array;
 }
+
+function printJsonError($number, $message){
+	$returnArr['response']['code'] = $number;
+	$returnArr['response']['message'] = $message;
+	$returnArr['response']['error'] = true;
+	http_response_code($number);
+	print json_encode($returnArr);
+	die;
+}
+
+
+
 ?>
