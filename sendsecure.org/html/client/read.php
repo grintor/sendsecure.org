@@ -19,7 +19,10 @@ $context = stream_context_create(array(
     'http' => array('ignore_errors' => true),
 ));
 $emailArr = json_decode(file_get_contents($apiURL, false, $context), true);
-if ($emailArr['response']['error']) header("Location: error.php?error=" . $result['response']['code']);
+if ($emailArr['response']['error']) {
+	header("Location: error.php?error=" . $emailArr['response']['code']);
+	die;
+}
 
 
 if(isset($emailArr['message']['html'])){

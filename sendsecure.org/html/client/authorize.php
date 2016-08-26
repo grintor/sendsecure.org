@@ -12,7 +12,10 @@ $context = stream_context_create(array(
     'http' => array('ignore_errors' => true),
 ));
 $emailArr = json_decode(file_get_contents($apiURL, false, $context), true);
-if ($emailArr['response']['error']) header("Location: error.php?error=" . $result['response']['code']);
+if ($emailArr['response']['error']) {
+	header("Location: error.php?error=" . $emailArr['response']['code']);
+	die;
+}
 
 // get the email address from _rcpttos based on the index
 $address[0]['email'] = $emailArr['rcpttos'][$_GET['index']];
