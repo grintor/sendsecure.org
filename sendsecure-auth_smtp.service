@@ -1,0 +1,15 @@
+# /lib/systemd/system/sendsecure-auth_smtp.service:
+# to enable: sudo systemctl enable sendsecure-auth_smtp.service
+
+[Unit]
+Description=Job that runs the sendsecure-smtp daemon
+
+[Service]
+Type=simple
+Restart=always
+WorkingDirectory=/opt/sendsecure-smtp
+ExecStart=/usr/bin/python3 auth_smtp.py
+
+[Install]
+WantedBy=network-online.target
+

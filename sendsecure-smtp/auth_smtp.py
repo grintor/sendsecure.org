@@ -1,13 +1,13 @@
 import sys
 sys.dont_write_bytecode = True
-from auth_smtpd import SMTPServer
+from lib_auth_smtpd import SMTPServer
 
 from subprocess import Popen, PIPE, STDOUT
 from requests import post
 from http.client import HTTPSConnection
 from cgi import escape as htmlspecialchars
 import json
-		
+
 class authSMTP():
 
 	def __init__(self):
@@ -32,7 +32,7 @@ class authSMTP():
 			mailtojson_stdout['rcpttos'] = rcpttos;
 			mailtojson_stdout['smtpuser'] = authSMTP.username;
 			mailtojson_stdout['smtppass'] = authSMTP.password;
-			
+
 			# here we normalize the data for the api
 			mailtojson_stdout['message1'] = {};
 			for e in mailtojson_stdout['message']:
@@ -48,9 +48,9 @@ class authSMTP():
 			# this happens if all recipients are BCC
 			if (mailtojson_stdout['to'][0]['name'] == 'undisclosed-recipients:'):
 				del mailtojson_stdout['to'][0]
-				
+
 			#print (json.dumps(mailtojson_stdout, ensure_ascii = False))
-			
+
 			conn = HTTPSConnection("www.sendsecure.org")
 			headers = { "charset" : "utf-8", "Content-Type": "application/json", "User-Agent": "SendSecure/MailEncode 1.0" }
 			postJson = json.dumps(mailtojson_stdout, ensure_ascii = False)
@@ -61,7 +61,7 @@ class authSMTP():
 
 
 authSmtpServer = authSMTP.server(
-	localaddr = ('0.0.0.0', 2525),
+	localaddr = ('127.0.0.1', 2525),
 	remoteaddr = None,
 	credential_validator = authSMTP.credentialManager(),
 	data_size_limit = 35650000
