@@ -13,16 +13,7 @@ if ($_SESSION[$_GET['id']] != 'authorized') {
 	header('Location: authorize.php?' . $_SERVER['QUERY_STRING']);
 }
 
-$apiURL = 'https://www.sendsecure.org/APIv1?id=' . $_GET['id'] . '&key=' . $_GET['key'];
-
-$context = stream_context_create(array(
-    'http' => array('ignore_errors' => true),
-));
-$emailArr = json_decode(file_get_contents($apiURL, false, $context), true);
-if ($emailArr['response']['error']) {
-	header("Location: error.php?error=" . $emailArr['response']['code']);
-	die;
-}
+$emailArr = apiGetMessage($_GET['id'], $_GET['key']);
 
 
 if(isset($emailArr['message']['html'])){

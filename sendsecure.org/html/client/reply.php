@@ -10,28 +10,12 @@ $smarty->setCompileDir('/tmp/smarty-templates_c');
 $smarty->setCacheDir('/tmp/smarty-cache');
 $smarty->setTemplateDir('../../resources/smarty-template_dir');
 
-
-$apiURL = 'https://www.sendsecure.org/APIv1?id=' . $_GET['id'] . '&key=' . $_GET['key'];
-$emailArr = json_decode(file_get_contents($apiURL), true);
+$emailArr = apiGetMessage($_GET['id'], $_GET['key']);
 
 // get the email address from _rcpttos based on the index
-$from[0]['email'] = $emailArr['rcpttos'][$_GET['index']];
-$from[0]['name']  = null;
-// get the name (if availble) corrasponding to that email address from _to
-foreach($emailArr['to'] as $t) {
-	if ($t['email']==$from[0]['email']){
-		$from[0]['name']=$t['name'];
-	}
-}
-// also try looking for the name in _cc
-foreach($emailArr['cc'] as $t) {
-	if ($t['email']==$from[0]['email']){
-		$from[0]['name']=$t['name'];
-	}
-}
+$from[0] = indexToAddress($_GET['index'], $emailArr);
 
 $subject = 'RE: ' . $emailArr['subject'];
-$date = date(RFC2822);
 
 // there might be a _reply-to in which case, we would ignore the _from
 if($emailArr['replyto']){
@@ -84,7 +68,7 @@ $smarty->assign('index', $_GET['index']);
 $smarty->assign('reply', $_GET['reply']);
 $smarty->assign('subject', $subject);
 $smarty->assign('from', addressListHTML($from));
-$smarty->assign('date', $date);
+$smarty->assign('date', date(RFC2822));
 $smarty->assign('to', $to);
 $smarty->assign('cc', $cc);
 $smarty->assign('platform', $platform);

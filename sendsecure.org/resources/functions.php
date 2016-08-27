@@ -32,6 +32,38 @@ function sqlQuery($query){
 	}
 }
 
+function apiGetMessage($id, $key){
+	$apiURL = 'https://www.sendsecure.org/APIv1?id=' . $id . '&key=' . $key;
+	$context = stream_context_create(array(
+		'http' => array('ignore_errors' => true),
+	));
+	$msgArr = json_decode(file_get_contents($apiURL, false, $context), true);
+	if ($msgArr['response']['error']) {
+		header("Location: error.php?error=" . $msgArr['response']['code']);
+		die;
+	}
+	return $msgArr;
+}
+
+function indexToAddress($index, $emailArr){
+	// get the email address from _rcpttos based on the index
+	$address['email'] = $emailArr['rcpttos'][$index];
+	$address['name']  = null;
+	// get the name (if availble) corrasponding to that email address from _to
+	foreach($emailArr['to'] as $t) {
+		if ($t['email']==$address['email']){
+			$address['name']=$t['name'];
+		}
+	}
+	// also try looking for the name in _cc
+	foreach($emailArr['cc'] as $t) {
+		if ($t['email']==$address['email']){
+			$address['name']=$t['name'];
+		}
+	}
+	return $address;
+}
+
 function removeFromArray($array, $thing, $column) {
 	$key = array_search($thing, array_column($array, $column));
 	if($key !== FALSE){

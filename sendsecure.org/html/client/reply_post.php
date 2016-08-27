@@ -9,25 +9,10 @@ $smarty->setTemplateDir('../../resources/smarty-template_dir');
 
 define("RFC2822", "D, d M Y H:i:s O");
 
-$apiURL = 'https://www.sendsecure.org/APIv1?id=' . $_POST['id'] . '&key=' . $_POST['key'];
-$context = stream_context_create(array(
-    'http' => array('ignore_errors' => true),
-));
-$emailArr = json_decode(file_get_contents($apiURL, false, $context), true);
-if ($emailArr['response']['error']) {
-	header("Location: error.php?error=" . $emailArr['response']['code']);
-	die;
-}
+$emailArr = apiGetMessage($_POST['id'], $_POST['key'])
 
 // get the email address from _rcpttos based on the index
-$message_data['from'][0]['email'] = $emailArr['rcpttos'][$_POST['index']];
-$message_data['from'][0]['name']  = null;
-// get the name (if availble) corrasponding to that email address from _to
-foreach($emailArr['to'] as $t) {
-	if ($t['email']==$message_data['from'][0]['email']){
-		$message_data['from'][0]['name']=$t['name'];
-	}
-}
+$message_data['from'][0] = indexToAddress($_GET['index'], $emailArr);
 
 // there might be a _reply-to in which case, we would ignore the _from
 if($emailArr['replyto']){
