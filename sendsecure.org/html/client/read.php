@@ -78,9 +78,9 @@ $date = strtotime($date);
 $date = date(RFC2822, $date);
 
 if (strpos($_SERVER['HTTP_USER_AGENT'], 'Mobi') !== false) {
-	$css = 'read.mobile.css';
+	$platform = 'mobile';
 } else {
-	$css = 'read.desktop.css';
+	$platform = 'desktop';
 }
 
 $smarty->assign('QUERY_STRING', $_SERVER['QUERY_STRING']);
@@ -89,7 +89,7 @@ $smarty->assign('attachments', $attachments);
 $smarty->assign('from', $from);
 $smarty->assign('date', $date);
 $smarty->assign('to', $to);
-$smarty->assign('css', $css);
+$smarty->assign('platform', $platform);
 $smarty->assign('replyTo', $replyTo);
 $smarty->assign('cc', $cc);
 $smarty->assign('message', $message);

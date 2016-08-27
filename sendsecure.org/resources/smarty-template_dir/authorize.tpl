@@ -1,5 +1,6 @@
 <html>
 	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 		<style>
 			.container {
 				width: 80%;
@@ -15,6 +16,8 @@
 			}
 			input[type='submit'] {
 				float: right;
+				padding-top: 5px;
+				padding-bottom: 5px;
 				margin-top: 10px;
 			}
 		</style>

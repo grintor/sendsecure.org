@@ -1,0 +1,17 @@
+.mailHead {
+	width: 98%;
+}
+
+.options span {
+	display: block;
+	margin-bottom: 10px;
+}
+
+.mailHead .vars {
+	display: block;
+	margin-left: 5px;
+}
+
+.mailBody {
+	width: 98%;
+}

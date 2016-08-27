@@ -1,0 +1,22 @@
+.mailHead {
+	width: 80%;
+}
+
+.options span + span::before {
+	content: "|";
+	padding-right: 5px;
+}
+
+.options span:nth-child(1)::before {
+	content: none;
+	padding-right: 0px;
+}
+
+.options span:nth-child(2)::before {
+	content: none;
+	padding-right: 0px;
+}
+
+.mailBody {
+	width: 80%;
+}

@@ -1,0 +1,74 @@
+.mailHead {
+	font-family: 'Lucida Sans Unicode','Lucida Grande', Verdana, Arial, Sans-Serif;
+	font-size: 13px;
+	background-color: rgb(244,244,244);
+	border: 1px solid lightgrey;
+	margin: auto;
+}
+
+#editor-print {
+	display: none;
+}
+
+.mailHead span {
+	display: inline-block;
+}
+
+.mailHead .vars {
+	vertical-align: top;
+	font-weight: bold;
+	color: rgb(153,153,153);
+}
+
+.mailBody {
+	border: 1px solid lightgrey;
+	margin: auto;
+	margin-top: 15px;
+}
+
+.mailBody .mailMessage {
+	display: inline-block;
+	max-width: 98%;
+	word-wrap: break-word;
+	padding-left: 1%;
+	padding-right: 1%;
+}
+
+pre {
+	white-space: pre-wrap;
+	word-wrap: break-word;
+}
+
+@media print {
+
+	#editor {
+		display: none;
+	}
+	
+	.ql-toolbar{
+		display: none;
+	}
+	
+	#editor-print {
+		display: block;
+		word-wrap: break-word;
+	}
+	
+	#editor-print p {
+		padding-left: 1%;
+		padding-right: 1%;
+	}
+	
+	.mailHead .vars {
+		margin-left: 50px;
+	}
+	.mailHead {
+		width: 100%;
+	}
+	.mailHead .options {
+		display: none;
+	}
+	.mailBody {
+		width: 100%;
+	}
+}

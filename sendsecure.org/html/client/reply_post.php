@@ -1,9 +1,23 @@
 <?php
 require_once('../../resources/html2text-0.3.4/html2text.php');
 require_once('../../resources/functions.php');
+require_once('../../resources/smarty-3.1.30/Smarty.class.php');
+$smarty = new Smarty;
+$smarty->setCompileDir('/tmp/smarty-templates_c');
+$smarty->setCacheDir('/tmp/smarty-cache');
+$smarty->setTemplateDir('../../resources/smarty-template_dir');
+
+define("RFC2822", "D, d M Y H:i:s O");
 
 $apiURL = 'https://www.sendsecure.org/APIv1?id=' . $_POST['id'] . '&key=' . $_POST['key'];
-$emailArr = json_decode(file_get_contents($apiURL), true);
+$context = stream_context_create(array(
+    'http' => array('ignore_errors' => true),
+));
+$emailArr = json_decode(file_get_contents($apiURL, false, $context), true);
+if ($emailArr['response']['error']) {
+	header("Location: error.php?error=" . $emailArr['response']['code']);
+	die;
+}
 
 // get the email address from _rcpttos based on the index
 $message_data['from'][0]['email'] = $emailArr['rcpttos'][$_POST['index']];
@@ -58,8 +72,8 @@ $message_data['datetime'] = date('Y-m-d H:i:s');
 $message_data['headers'] = null;
 $message_data['reply-to'] = [];
 
-$message_data['message']['html'] = convert_html_to_text($_POST['message']);
-$message_data['message']['text'] = $_POST['message'];
+$message_data['message']['text'] = convert_html_to_text($_POST['message']);
+$message_data['message']['html'] = $_POST['message'];
 
 $data_string = json_encode($message_data); 
 $ch = curl_init('https://www.sendsecure.org/APIv1/');
@@ -72,7 +86,31 @@ curl_setopt($ch, CURLOPT_HTTPHEADER, array(
 );
 
 $result = curl_exec($ch);
-print "\n\n\nresult: " . $result;
+// TODO: error handle
+
+//--------------------------------------------------
+
+
+if (strpos($_SERVER['HTTP_USER_AGENT'], 'Mobi') !== false) {
+	$platform = 'mobile';
+} else {
+	$platform = 'desktop';
+}
+
+$cc = null;
+if ($message_data['cc']) {
+	$cc = addressListHTML($message_data['cc']);
+	$cc = "<p><span class = 'vars'>CC:</span><span>" . $cc . "</span></p>";
+}
+
+$smarty->assign('subject', $message_data['subject']);
+$smarty->assign('from', addressListHTML($message_data['from']));
+$smarty->assign('date', date(RFC2822));
+$smarty->assign('to', addressListHTML($message_data['to']));
+$smarty->assign('platform', $platform);
+$smarty->assign('cc', $cc);
+$smarty->assign('message', htmlspecialchars_decode($message_data['message']['html']));
+$smarty->display('reply_post.tpl');
 
 
 ?>

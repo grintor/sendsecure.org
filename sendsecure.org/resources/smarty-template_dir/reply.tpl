@@ -3,7 +3,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 	<link href="https://cdn.quilljs.com/1.0.0-beta.11/quill.snow.css" rel="stylesheet">
 	<script src="https://cdn.quilljs.com/1.0.0-beta.11/quill.js"></script>
-	<link rel="stylesheet" type="text/css" href="{$css}" />
+	<link rel="stylesheet" type="text/css" href="reply.{$platform}.css" />
 	<script src='moment.min.js'></script>
 	<script src='reply.js'></script>
 </head>

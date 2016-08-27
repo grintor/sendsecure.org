@@ -69,9 +69,9 @@ $oldMessage = '<span id="oldMsg" style="color:#666666;line-height:1;">' . $oldMe
 $oldMessage = htmlspecialchars($oldMessage);
 
 if (strpos($_SERVER['HTTP_USER_AGENT'], 'Mobi') !== false) {
-	$css = 'reply.mobile.css';
+	$platform = 'mobile';
 } else {
-	$css = 'reply.desktop.css';
+	$platform = 'desktop';
 }
 
 
@@ -87,7 +87,7 @@ $smarty->assign('from', addressListHTML($from));
 $smarty->assign('date', $date);
 $smarty->assign('to', $to);
 $smarty->assign('cc', $cc);
-$smarty->assign('css', $css);
+$smarty->assign('platform', $platform);
 $smarty->assign('message', $message);
 $smarty->display('reply.tpl');
 ?>

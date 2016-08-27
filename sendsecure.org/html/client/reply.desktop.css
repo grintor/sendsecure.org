@@ -1,41 +1,14 @@
-.mailHead {
-	font-family: 'Lucida Sans Unicode','Lucida Grande', Verdana, Arial, Sans-Serif;
-	font-size: 13px;
-	background-color: rgb(244,244,244);
-	border: 1px solid lightgrey;
-	width: 80%;
-	margin: auto;
-}
+@import 'desktop.common.css';
+@import 'reply.common.css';
 
-#editor-print {
-	display: none;
-}
-
-.mailHead span {
-	display: inline-block;
-}
 .mailHead .vars {
-	vertical-align: top;
 	display: inline-block;
 	width: 100px;
-	font-weight: bold;
 	margin-left: 100px;
-	color: rgb(153,153,153);
 }
+
 .mailHead p {
 	margin: 2px;
-}
-
-.options span + span::before {
-	content: " | ";
-}
-
-.options span:nth-child(1)::before {
-	content: "";
-}
-
-.options span:nth-child(2)::before {
-	content: "";
 }
 
 #attach-names div {
@@ -50,68 +23,3 @@
 	content: "";
 }
 
-/* replaced with neat stuff from above
-#print-page::after { 
-    content: " | ";
-}
-
-#add-attach::after { 
-    content: " | ";
-}
-
-#remove-attach::after { 
-    content: " | ";
-}
- */
-.mailBody {
-	border: 1px solid lightgrey;
-	width: 80%;
-	margin: auto;
-	margin-top: 15px;
-}
-.mailBody .mailMessage {
-	display: inline-block;
-	max-width: 98%;
-	word-wrap: break-word;
-	padding-left: 1%;
-	padding-right: 1%;
-}
-
-pre {
-	white-space: pre-wrap;
-	word-wrap: break-word;
-}
-
-@media print {
-	
-	#editor {
-		display: none;
-	}
-	
-	#editor-print {
-		display: block;
-		word-wrap: break-word;
-	}
-	
-	#editor-print p {
-		padding-left: 1%;
-		padding-right: 1%;
-	}
-	
-	.mailHead .vars {
-		margin-left: 30px;
-	}
-	.mailHead {
-		width: 100%;
-	}
-	.mailHead .options {
-		display: none;
-	}
-	.mailBody {
-		width: 100%;
-	}
-	
-	.ql-toolbar {
-		display: none;
-	}
-}
