@@ -43,14 +43,16 @@ $sqlResult = sqlQuery(sprintf(
 
 $index = 0;
 foreach($message_data['rcpttos'] as $rcptto) {
-	$headers = 'From: "' . $message_data['from'][0]['name'] . '" <do-not-reply@sendsecure.org>';
+	$headers =  'From: "' . $message_data['from'][0]['name'] . '" <do-not-reply@sendsecure.org>' . "\r\n";
 	$subject = '[SECURE] ' . $message_data['subject'];
 	$message = 'You have a secure message. Click here to read it' . "\r\n" .
 	'https://www.sendsecure.org/client/read.php?id=' . $uniqid . '&key=' . $key . '&index=' . $index;
-	mail($rcptto, $subject, $message, $headers);
+	$additional = "-rbounce-$uniqid@sendsecure.org -ODeliveryMode=background";
+	mail($rcptto, $subject, $message, $headers, $additional)
 	$index++;
 }
 
+// TODO: handle errors
 $returnArr['response']['code'] = 200;
 $returnArr['response']['message'] = 'OK';
 $returnArr['response']['error'] = false;

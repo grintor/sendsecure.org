@@ -62,10 +62,8 @@ if (strpos($_SERVER['HTTP_USER_AGENT'], 'Mobi') !== false) {
 $message = '<br /><br />';
 $message .= $oldMessage;
 
-$smarty->assign('id', $_GET['id']);
-$smarty->assign('key', $_GET['key']);
-$smarty->assign('index', $_GET['index']);
-$smarty->assign('reply', $_GET['reply']);
+
+$smarty->assign('QUERY_STRING', $_SERVER['QUERY_STRING']);
 $smarty->assign('subject', $subject);
 $smarty->assign('from', addressListHTML($from));
 $smarty->assign('date', date(RFC2822));

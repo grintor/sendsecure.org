@@ -1,16 +1,6 @@
 @import 'desktop.common.css';
 @import 'reply.common.css';
 
-.mailHead .vars {
-	display: inline-block;
-	width: 100px;
-	margin-left: 100px;
-}
-
-.mailHead p {
-	margin: 2px;
-}
-
 #attach-names div {
 	display: inline-block;
 }

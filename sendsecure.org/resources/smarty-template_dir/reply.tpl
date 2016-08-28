@@ -13,14 +13,11 @@
 		<p><span class = 'vars'>From:</span><span>{$from}</span></p>
 		<p><span class = 'vars'>Date:</span><span id='now'>{$date}</span></p>
 		<p><span class = 'vars'>To:</span><span>{$to}</span></p>
+		{strip}
 		{$cc}
-		<form action='reply_post.php' method='post' enctype='multipart/form-data'>
+		<form action='reply_post.php?{$QUERY_STRING}' method='post' enctype='multipart/form-data'>
 			<p id='attachments'><span class = 'vars'>Attachments:</span><span id='attach-names'></span></p>
 			<span id='attach-container'></span>
-			<input type="hidden" name="id" value='{$id}' />
-			<input type="hidden" name="key" value='{$key}' />
-			<input type="hidden" name="index" value='{$index}' />
-			<input type="hidden" name="reply" value='{$reply}' />
 		</form>
 		<p class='options'><span class = 'vars'>Options:</span>
 			<span id='print-page'><a href="#" onclick='window.print()'>Print This Page</a></span>
@@ -28,6 +25,7 @@
 			<span id='remove-attach'><a href="#" onclick="removeAttach()">Remove Attachments</a></span>
 			<span><a href="#" onclick="send();">Send</a></span>
 		</p>
+		{/strip}
 	</div>
 	<div class='mailBody'>
 		<span class = "mailMessage"></span>

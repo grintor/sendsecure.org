@@ -9,7 +9,7 @@ $smarty->setTemplateDir('../../resources/smarty-template_dir');
 
 define("RFC2822", "D, d M Y H:i:s O");
 
-$emailArr = apiGetMessage($_POST['id'], $_POST['key'])
+$emailArr = apiGetMessage($_GET['id'], $_GET['key']);
 
 // get the email address from _rcpttos based on the index
 $message_data['from'][0] = indexToAddress($_GET['index'], $emailArr);
@@ -21,7 +21,7 @@ if($emailArr['replyto']){
 	$message_data['to'] = $emailArr['from'];
 }
 
-if ($_POST['reply']=='all') { // the user choose reply-to-all
+if ($_GET['reply']=='all') { // the user choose reply-to-all
 	// the $cc will be a combination of the origional message _cc and _to
 	$message_data['cc'] = array_merge($emailArr['to'], $emailArr['cc']);
 	$message_data['cc'] = removeFromArray($message_data['cc'], $message_data['from'][0]['email'], 'email'); // remove self from the reply to group

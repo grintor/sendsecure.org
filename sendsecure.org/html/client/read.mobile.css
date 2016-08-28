@@ -2,12 +2,14 @@
 @import 'read.common.css';
 
 .mailHead p span {
+	display: block;
 	margin-left: 5px;
 }
 
 .mailHead p {
 	margin-bottom: 10px;
 }
+
 
 .mailBody {
 	width: 98%;

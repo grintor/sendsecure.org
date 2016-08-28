@@ -11,10 +11,10 @@
 			<p><span class = 'vars'>From:</span><span>{$from}</span></p>
 			<p><span class = 'vars'>Date:</span><span id='now'>{$date}</span></p>
 			<p><span class = 'vars'>To:</span><span>{$to}</span></p>
+			{strip}
 			{$replyTo}
 			{$cc}
 			{$attachments}
-			{strip}
 			<p class='options'><span class = 'vars'>Options:</span>
 				<span><a href="#" onclick="window.print();">Print this page</a></span>
 				<span><a href="#" onclick="window.print();">View Message Details</a></span>

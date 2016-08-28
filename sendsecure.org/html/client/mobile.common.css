@@ -7,6 +7,10 @@
 	margin-bottom: 10px;
 }
 
+.mailHead p {
+	margin: 2px;
+}
+
 .mailHead .vars {
 	display: block;
 	margin-left: 5px;

@@ -14,11 +14,7 @@
 	display: inline-block;
 	width: 100px;
 	font-weight: bold;
-	margin-left: 100px;
 	color: rgb(153,153,153);
-}
-.mailHead p {
-	margin: 2px;
 }
 
 .mailBody {
