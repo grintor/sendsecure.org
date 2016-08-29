@@ -1,3 +1,4 @@
+# /etc/mail/sendmail.mc
 divert(-1)dnl
 #-----------------------------------------------------------------------------
 # $Sendmail: debproto.mc,v 8.15.2 2015-12-10 18:02:49 cowboy Exp $
@@ -104,7 +105,8 @@ FEATURE(`allmasquerade')dnl
 FEATURE(`masquerade_envelope')dnl
 
 FEATURE(`stickyhost')
-define(`MAIL_HUB', `smtp.sendsecure.org.')dnl
+# eth0-ip is the interface address of eth0 and was added to /etc/hosts
+define(`MAIL_HUB', `eth0-ip.')dnl
 
 dnl #
 dnl # Default Mailer setup
