@@ -15,6 +15,6 @@ server = CustomSMTPServer(
 	remoteaddr = None,
 	data_size_limit = 35650000
 	)
-print ('Server is gestart')
+print ('Server is started')
 
 asyncore.loop()

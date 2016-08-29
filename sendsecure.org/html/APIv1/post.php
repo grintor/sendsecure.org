@@ -48,7 +48,7 @@ foreach($message_data['rcpttos'] as $rcptto) {
 	$message = 'You have a secure message. Click here to read it' . "\r\n" .
 	'https://www.sendsecure.org/client/read.php?id=' . $uniqid . '&key=' . $key . '&index=' . $index;
 	$additional = "-rbounce-$uniqid@sendsecure.org -ODeliveryMode=background";
-	mail($rcptto, $subject, $message, $headers, $additional)
+	mail($rcptto, $subject, $message, $headers, $additional);
 	$index++;
 }
 
