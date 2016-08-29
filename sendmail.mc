@@ -1,4 +1,3 @@
-# /etc/mail/sendmail.mc
 divert(-1)dnl
 #-----------------------------------------------------------------------------
 # $Sendmail: debproto.mc,v 8.15.2 2015-12-10 18:02:49 cowboy Exp $
@@ -104,8 +103,10 @@ MASQUERADE_AS(`securesend.org')dnl
 FEATURE(`allmasquerade')dnl
 FEATURE(`masquerade_envelope')dnl
 
-FEATURE(`stickyhost')
-# eth0-ip is the interface address of eth0 and was added to /etc/hosts
+# eth0-ip is in /etc/hosts
+MASQUERADE_AS(`sendsecure.org')
+MASQUERADE_DOMAIN(`smtp.sendsecure.org')
+#FEATURE(`stickyhost')
 define(`MAIL_HUB', `eth0-ip.')dnl
 
 dnl #
