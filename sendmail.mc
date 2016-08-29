@@ -102,6 +102,10 @@ FEATURE(`always_add_domain')dnl
 MASQUERADE_AS(`securesend.org')dnl
 FEATURE(`allmasquerade')dnl
 FEATURE(`masquerade_envelope')dnl
+
+FEATURE(`stickyhost')
+define(`MAIL_HUB', `smtp.sendsecure.org.')dnl
+
 dnl #
 dnl # Default Mailer setup
 MAILER_DEFINITIONS
