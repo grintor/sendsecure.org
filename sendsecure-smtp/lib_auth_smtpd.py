@@ -1,18 +1,14 @@
 import sys
 sys.dont_write_bytecode = True
-
 import smtpd
-import asyncore
 import asynchat
 import collections
+from warnings import warn
+import asyncore
 import socket
 import time
+
 import base64
-from asyncore import ExitNow
-import signal
-from multiprocessing import Process
-import traceback
-from warnings import warn
 
 __version__ = 'Thanks for us choosing to SendSecure!'
 
@@ -28,13 +24,9 @@ class Devnull:
 DEBUGSTREAM = Devnull()
 
 class SMTPChannel(smtpd.SMTPChannel): #edited
-	COMMAND = 0
-	DATA = 1
 
-	command_size_limit = 512
-	command_size_limits = collections.defaultdict(lambda x=command_size_limit: x)
-
-	def __init__(self, server, conn, addr, credential_validator, data_size_limit=smtpd.DATA_SIZE_DEFAULT, map=None, enable_SMTPUTF8=False, decode_data=None): #edited
+	def __init__(self, server, conn, addr, data_size_limit=smtpd.DATA_SIZE_DEFAULT, # edited
+				 map=None, enable_SMTPUTF8=False, decode_data=None, credential_validator = None): # edited
 		asynchat.async_chat.__init__(self, conn, map=map)
 		self.smtp_server = server
 		self.conn = conn
@@ -82,11 +74,14 @@ class SMTPChannel(smtpd.SMTPChannel): #edited
 			self.close()
 			if err.args[0] != errno.ENOTCONN:
 				raise
-			raise ExitNow() #added
 			return
 		print('Peer:', repr(self.peer), file=DEBUGSTREAM)
 		self.push('220 %s %s' % (self.fqdn, __version__))
-
+		
+	def push(self, msg):
+		asynchat.async_chat.push(self, bytes(
+			msg + '\r\n', 'utf-8' if self.require_SMTPUTF8 else 'ascii'))
+		print('Data:', msg, file=DEBUGSTREAM) # added
 
 	# Implementation of base class abstract method
 	def found_terminator(self):
@@ -94,6 +89,7 @@ class SMTPChannel(smtpd.SMTPChannel): #edited
 		#print('Data:', repr(line), file=DEBUGSTREAM)
 		self.received_lines = []
 		if self.smtp_state == self.COMMAND:
+			print('RX:', repr(line), file=DEBUGSTREAM)
 			sz, self.num_bytes = self.num_bytes, 0
 			if not line:
 				self.push('500 Error: bad syntax')
@@ -191,13 +187,7 @@ class SMTPChannel(smtpd.SMTPChannel): #edited
 			self.command_size_limits['MAIL'] += 10
 		self.push('250-AUTH LOGIN PLAIN') #added
 		self.push('250 HELP')
-
-	def smtp_QUIT(self, arg):
-		# args is ignored
-		self.push('221 Bye')
-		self.close_when_done()
-		raise ExitNow() # added
-
+		
 	#added
 	def smtp_AUTH(self, arg):
 
@@ -232,9 +222,8 @@ class SMTPChannel(smtpd.SMTPChannel): #edited
 				self.authenticated = True
 				self.push('235 Authentication successful.')
 			else:
-				self.push('454 Temporary authentication failure.')
+				self.push('454 Temporary authentication failure!')
 				self.close_when_done()
-				raise ExitNow()
  
 		elif 'LOGIN' in arg:
 			self.authenticating = True
@@ -269,19 +258,20 @@ class SMTPChannel(smtpd.SMTPChannel): #edited
 			else:
 				self.push('454 Temporary authentication failure.')
 				self.close_when_done()
-				raise ExitNow()
-	
+
 
 class SMTPServer(smtpd.SMTPServer): #edited
 	# SMTPChannel class to use for managing client connections
 	channel_class = SMTPChannel
 
-	def __init__(self, localaddr, remoteaddr, credential_validator, data_size_limit=smtpd.DATA_SIZE_DEFAULT, map=None, enable_SMTPUTF8=False, decode_data=None): #edited
+	def __init__(self, localaddr, remoteaddr,
+				 data_size_limit=smtpd.DATA_SIZE_DEFAULT, map=None, # edited
+				 enable_SMTPUTF8=False, decode_data=None, credential_validator = None): # edited
 		self._localaddr = localaddr
 		self._remoteaddr = remoteaddr
-		self.credential_validator = credential_validator #added
 		self.data_size_limit = data_size_limit
 		self.enable_SMTPUTF8 = enable_SMTPUTF8
+		self.credential_validator = credential_validator #added
 		if enable_SMTPUTF8:
 			if decode_data:
 				raise ValueError("The decode_data and enable_SMTPUTF8"
@@ -306,58 +296,19 @@ class SMTPServer(smtpd.SMTPServer): #edited
 		except:
 			traceback.print_exc(file=DEBUGSTREAM) #added
 			self.close()
-			raise ExitNow() # added
 			raise
 		else:
 			print('%s started at %s\n\tLocal addr: %s\n\tRemote addr:%s' % (
 				self.__class__.__name__, time.ctime(time.time()),
 				localaddr, remoteaddr), file=DEBUGSTREAM)
-
-	#edited			
+				
 	def handle_accepted(self, conn, addr):
 		print('Incoming connection from %s' % repr(addr), file=DEBUGSTREAM)
-		#added
-		process = Process(target=self._accept_subprocess, args=( conn, addr))
-		process.daemon = True
-		process.start()
-		#/added
-
-
-	#added
-	def _accept_subprocess(self, newsocket, fromaddr):
-		try:
-			channel = SMTPChannel(
-				server = self,
-				conn = newsocket,
-				addr = fromaddr,
-				data_size_limit=self.data_size_limit,
-				credential_validator=self.credential_validator,
-			)
-			asyncore.loop()
-		except (ExitNow):
-			self._shutdown_socket(newsocket)
-			print('_accept_subprocess(): smtp channel terminated asyncore.', file=DEBUGSTREAM)
-		except Exception as e:
-			self._shutdown_socket(newsocket)
-			traceback.print_exc(file=DEBUGSTREAM)
-
-			
-	#added
-	def _shutdown_socket(self, s):
-		try:
-			s.shutdown(socket.SHUT_RDWR)
-			s.close()
-		except Exception as e:
-			traceback.print_exc(file=DEBUGSTREAM)
-			
-
-	#added
-	def run(self):
-		asyncore.loop()
-		if hasattr(signal, 'SIGTERM'):
-			def sig_handler(signal,frame):
-				print("Got signal %s, shutting down." % signal, file=DEBUGSTREAM)
-				sys.exit(0)
-			signal.signal(signal.SIGTERM, sig_handler)
-		while 1:
-			time.sleep(1)
+		channel = self.channel_class(self,
+									 conn,
+									 addr,
+									 self.data_size_limit,
+									 self._map,
+									 self.enable_SMTPUTF8,
+									 self._decode_data,
+									 self.credential_validator) # added

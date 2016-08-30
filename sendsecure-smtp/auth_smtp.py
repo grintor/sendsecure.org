@@ -1,6 +1,7 @@
 import sys
 sys.dont_write_bytecode = True
 from lib_auth_smtpd import SMTPServer
+import asyncore
 
 from subprocess import Popen, PIPE, STDOUT
 from requests import post
@@ -56,7 +57,7 @@ class authSMTP():
 			postJson = json.dumps(mailtojson_stdout, ensure_ascii = False)
 			conn.request("POST", "/APIv1/", postJson.encode('utf-8'), headers)
 			response = conn.getresponse()
-			print(response.read())
+			print('Sent! API response:', response.read())
 			conn.close()
 
 
@@ -67,4 +68,5 @@ authSmtpServer = authSMTP.server(
 	data_size_limit = 35650000
 	)
 
-authSmtpServer.run()
+print ('Server is started')
+asyncore.loop()
