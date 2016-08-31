@@ -1,6 +1,5 @@
 from smtpd import SMTPServer
 import asyncore
-from requests import post
 from http.client import HTTPSConnection
 import json
 from subprocess import Popen, PIPE, STDOUT
@@ -16,6 +15,8 @@ class CustomSMTPServer(SMTPServer):
 		mailtojson_stdout['mailfrom'] = mailfrom;
 		mailtojson_stdout['peer'] = peer;
 
+		
+		
 		conn = HTTPSConnection("www.sendsecure.org")
 		headers = { "charset" : "utf-8", "Content-Type": "application/json", "User-Agent": "SendSecure/MailEncode 1.0" }
 		postJson = json.dumps(mailtojson_stdout, ensure_ascii = False)
@@ -23,7 +24,7 @@ class CustomSMTPServer(SMTPServer):
 		response = conn.getresponse()
 		print('Posted! API response:', response.read())
 		conn.close()
-		return
+		#print(postJson)
 
 
 server = CustomSMTPServer(

@@ -21,6 +21,17 @@ function addressListHTML($addressArray, $delimer=',<br />') {
 	return $email;
 }
 
+function parseBounce($address){
+	if (strpos($address, 'bounce-') !== False) {
+		$Arr = explode('-', $address);
+		if (strpos($Arr[1], '@')!== False) {
+			$Arr = explode('@', $Arr[1]);
+			return $Arr[0];
+		}
+	}
+	return False;
+}
+
 
 function sqlQuery($query){
 	global $mysqli;

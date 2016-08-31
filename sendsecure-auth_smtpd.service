@@ -8,7 +8,7 @@ Description=Job that runs the sendsecure-smtp daemon
 Type=simple
 Restart=always
 WorkingDirectory=/opt/sendsecure-smtp
-ExecStart=/usr/bin/python3 auth_smtp.py 2> /dev/null
+ExecStart=/usr/bin/python3 auth_smtpd.py
 
 [Install]
 WantedBy=network-online.target
