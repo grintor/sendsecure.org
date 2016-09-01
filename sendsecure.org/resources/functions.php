@@ -1,4 +1,5 @@
 <?php
+define("STRIPE_SK", "sk_test_KoH73vUJWl2AYjpsMCK0bRjN");
 
 function addressListHTML($addressArray, $delimer=',<br />') {
 	$email = null;
@@ -30,17 +31,6 @@ function parseBounce($address){
 		}
 	}
 	return False;
-}
-
-
-function sqlQuery($query){
-	global $mysqli;
-	if (!$sqlResult = $mysqli->query($query)) {
-		trigger_error('DB query failed: ' . $mysqli->error . "\nquery: " . $query);
-		return false;
-	} else {
-		return $sqlResult;
-	}
 }
 
 function apiGetMessage($id, $key){
@@ -92,6 +82,53 @@ function printJsonError($number, $message){
 	die;
 }
 
+function registerWithStripe($userArr) {
+	$description = urlencode($userArr['firstname'] . ' ' . $userArr['lastname']);
+	$email = urlencode($userArr['email']);
+	$fields_string = 'description=' . $description . '&email=' . $email;
+	
+	$ch = curl_init();
+	curl_setopt($ch,CURLOPT_URL, 'https://api.stripe.com/v1/customers');
+	curl_setopt($ch,CURLOPT_POSTFIELDS, $fields_string);
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+	curl_setopt($ch, CURLOPT_USERPWD, STRIPE_SK . ':');
 
+	$result = curl_exec($ch); //execute post
+	curl_close($ch);
+	$result = json_decode($result, true);
+	
+	$DBstripe_id = $result['id'];
+	$DBemail = $userArr['email'];
+	sqlQuery("update users set stripe_id='$DBstripe_id' where email='$DBemail'", false);
+}
+
+function getStripeUser($email) {
+	$stripe_id = mysqli_fetch_array(sqlQuery("select stripe_id from users where email='$email'"));
+	$stripe_id = $stripe_id['stripe_id'];
+	
+	$ch = curl_init();
+	curl_setopt($ch,CURLOPT_URL, "https://api.stripe.com/v1/customers/$stripe_id");
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+	curl_setopt($ch, CURLOPT_USERPWD, STRIPE_SK . ':');
+
+	$result = curl_exec($ch); //execute post
+	curl_close($ch);
+	return json_decode($result, true);
+}
+
+function updateCard($stripe_id, $number, $exp_month, $exp_year, $cvc) {
+	
+	$fields_string = "source[object]=card&source[exp_month]=$exp_month&source[exp_year]=$exp_year&source[number]=$number&source[cvc]=$cvc";
+
+	$ch = curl_init();
+	curl_setopt($ch, CURLOPT_URL, "https://api.stripe.com/v1/customers/$stripe_id");
+	curl_setopt($ch, CURLOPT_POSTFIELDS, $fields_string);
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+	curl_setopt($ch, CURLOPT_USERPWD, STRIPE_SK . ':');
+
+	$result = curl_exec($ch); //execute post
+	curl_close($ch);
+	return json_decode($result, true);
+}
 
 ?>
