@@ -2,6 +2,7 @@
 require_once('../../resources/html2text-0.3.4/html2text.php');
 require_once('../../resources/functions.php');
 require_once('../../resources/smarty-3.1.30/Smarty.class.php');
+require_once('../../resources/SECRET.php');
 $smarty = new Smarty;
 $smarty->setCompileDir('/tmp/smarty-templates_c');
 $smarty->setCacheDir('/tmp/smarty-cache');
@@ -49,7 +50,7 @@ foreach($message_data['to'] as $to){
 $message_data['subject'] = 'RE: ' . $emailArr['subject'];
 
 
-$message_data['smtpuser'] = '_REPLY_';
+$message_data['smtpuser'] = SELF_USER;
 $message_data['mailfrom'] = [];
 $message_data['peer'] = [];
 $message_data['encoding'] = null;

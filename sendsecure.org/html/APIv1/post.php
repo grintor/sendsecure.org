@@ -6,7 +6,7 @@ $returnArr = [];
 
 $message_data = json_decode(file_get_contents('php://input'), true);
 
-if ($_SERVER['REMOTE_ADDR'] != SELF_IP) { // defined in SECRET.php
+if ($message_data['smtpuser'] != SELF_USER) { // defined in SECRET.php
 	$auth_data = 'username=' . $message_data['smtpuser'] . '&password=' . $message_data['smtppass'];
 	$ch = curl_init('https://www.sendsecure.org/APIv1/auth/');                                                                      
 	curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");                                                                     
