@@ -35,7 +35,7 @@ if ($bounceKey) {
 
 $prefix = explode('@', $message_data['to'][0]['email']);
 
-$sqlResult = sqlQuery(sprintf("SELECT address FROM addresses WHERE uniqid = '%s'",
+$sqlResult = sqlQuery(sprintf("SELECT address FROM addresses WHERE account = '%s'",
 	mysqli_real_escape_string($mysqli, $prefix[0])
 ));
 

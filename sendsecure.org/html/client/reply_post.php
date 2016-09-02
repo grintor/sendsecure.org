@@ -49,7 +49,7 @@ foreach($message_data['to'] as $to){
 $message_data['subject'] = 'RE: ' . $emailArr['subject'];
 
 
-$message_data['smtpuser'] = 'temp';
+$message_data['smtpuser'] = '_REPLY_';
 $message_data['mailfrom'] = [];
 $message_data['peer'] = [];
 $message_data['encoding'] = null;

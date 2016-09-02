@@ -1,20 +1,24 @@
 <?php
 require_once('../../resources/functions.php');
+require_once('../../resources/SECRET.php');
 
 $returnArr = [];
 
 $message_data = json_decode(file_get_contents('php://input'), true);
 
-$auth_data = 'username=' . $message_data['smtpuser'] . '&password=' . $message_data['smtppass'];
-$ch = curl_init('https://www.sendsecure.org/APIv1/auth/');                                                                      
-curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");                                                                     
-curl_setopt($ch, CURLOPT_POSTFIELDS, $auth_data);                                                                  
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-curl_setopt($ch, CURLOPT_HEADER, 0);
-$auth_result = curl_exec($ch); 
-$auth_result = json_decode($auth_result, true); 
-if ($auth_result['response']['error']){
-	printJsonError(401 , 'UNAUTHORIZED');
+if ($_SERVER['REMOTE_ADDR'] != SELF_IP) { // defined in SECRET.php
+	$auth_data = 'username=' . $message_data['smtpuser'] . '&password=' . $message_data['smtppass'];
+	$ch = curl_init('https://www.sendsecure.org/APIv1/auth/');                                                                      
+	curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");                                                                     
+	curl_setopt($ch, CURLOPT_POSTFIELDS, $auth_data);                                                                  
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+	curl_setopt($ch, CURLOPT_HEADER, 0);
+	$auth_result = curl_exec($ch); 
+	$auth_result = json_decode($auth_result, true); 
+	if ($auth_result['response']['error']){
+		printJsonError(401 , 'UNAUTHORIZED');
+	}
+	$message_data['from'][0]['email'] = $auth_result['address']; // we re-write the email with the user account email address
 }
 
 $uniqid = uniqid('', true);		// this is also the salt (or iv)
@@ -23,8 +27,6 @@ $key = hash('sha256', openssl_random_pseudo_bytes(256));
 if (isset($message_data['message']['html'])) {
 	$message_data['message']['html'] = htmlspecialchars_decode($message_data['message']['html']);
 }
-
-$message_data['from'][0]['email'] = $auth_result['address']; // we re-write the email with the user account email address
 
 $sqlResult = sqlQuery(sprintf(
 	"INSERT INTO emails VALUES (
