@@ -24,6 +24,8 @@ if (isset($message_data['message']['html'])) {
 	$message_data['message']['html'] = htmlspecialchars_decode($message_data['message']['html']);
 }
 
+$message_data['from'][0]['email'] = $auth_result['address']; // we re-write the email with the user account email address
+
 $sqlResult = sqlQuery(sprintf(
 	"INSERT INTO emails VALUES (
 	UTC_TIMESTAMP,

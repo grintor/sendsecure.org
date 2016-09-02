@@ -1,5 +1,5 @@
 <?php
-define("STRIPE_SK", "sk_test_KoH73vUJWl2AYjpsMCK0bRjN");
+require_once('SECRET.php');
 
 function addressListHTML($addressArray, $delimer=',<br />') {
 	$email = null;
@@ -102,10 +102,7 @@ function registerWithStripe($userArr) {
 	sqlQuery("update users set stripe_id='$DBstripe_id' where email='$DBemail'", false);
 }
 
-function getStripeUser($email) {
-	$stripe_id = mysqli_fetch_array(sqlQuery("select stripe_id from users where email='$email'"));
-	$stripe_id = $stripe_id['stripe_id'];
-	
+function getStripeUser($stripe_id) {
 	$ch = curl_init();
 	curl_setopt($ch,CURLOPT_URL, "https://api.stripe.com/v1/customers/$stripe_id");
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -130,5 +127,184 @@ function updateCard($stripe_id, $number, $exp_month, $exp_year, $cvc) {
 	curl_close($ch);
 	return json_decode($result, true);
 }
+
+function deleteCard($stripe_id) {
+	$user = getStripeUser($stripe_id);
+	if (!isset($user['sources']['data'][0]['id'])){
+		$result['error']['message'] = 'No card info to remove';
+		return $result;
+	}
+	$cardID = $user['sources']['data'][0]['id'];
+	$ch = curl_init();
+	curl_setopt($ch, CURLOPT_URL, "https://api.stripe.com/v1/customers/$stripe_id/sources/$cardID");
+	curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "DELETE");
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+	curl_setopt($ch, CURLOPT_USERPWD, STRIPE_SK . ':');
+
+	$result = curl_exec($ch); //execute post
+	curl_close($ch);
+	return json_decode($result, true);
+}
+
+function addSubscription($stripe_id, $subscriptionEmail) {
+	global $mysqli;
+	
+	// check if there are any subscriptions now. If so, we will be editing one below, otherwise we will be adding one below.
+	$currentsubscriptions = mysqli_fetch_all(sqlQuery("select * from addresses where stripe_id='$stripe_id'"), MYSQLI_ASSOC);
+	
+	// put the new subscription in the database
+	$DBaddress = mysqli_real_escape_string($mysqli, strtolower($subscriptionEmail));
+	$DBaccount = uniqid();
+	$DBpassword = uniqid();
+	$DBuniqid = uniqid();
+	sqlQuery("INSERT INTO addresses (address, account, password, stripe_id, uniqid) VALUES ('$DBaddress', '$DBaccount', '$DBpassword', '$stripe_id', '$DBuniqid')", false);
+
+	
+	if (!$currentsubscriptions) { // we are actaully creating a new subscription in this case
+		return createSubscription($stripe_id);
+	} else { // we will be editing a current subscription
+		return updateSubscription($stripe_id);
+	}
+
+}
+
+function subtractSubscription($stripe_id, $subscriptionID) {
+	global $mysqli;
+	$DBdelete = mysqli_real_escape_string($mysqli, $subscriptionID);
+	sqlQuery("DELETE FROM addresses WHERE uniqid='$DBdelete' AND stripe_id = '$stripe_id'", false);
+	updateSubscription($stripe_id);
+}
+
+function createSubscription($stripe_id) {
+	$fields_string = "plan=ssm&customer=$stripe_id";
+
+	$ch = curl_init();
+	curl_setopt($ch, CURLOPT_URL, "https://api.stripe.com/v1/subscriptions");
+	curl_setopt($ch, CURLOPT_POSTFIELDS, $fields_string);
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+	curl_setopt($ch, CURLOPT_USERPWD, STRIPE_SK . ':');
+
+	$result = curl_exec($ch); //execute post
+	curl_close($ch);
+	
+	return json_decode($result, true);
+}
+
+
+// update stripe subscription with info from the database;
+function updateSubscription($stripe_id) {
+	$stripeUser = getStripeUser($stripe_id);
+	
+	$quantity = count(mysqli_fetch_all(sqlQuery("select * from addresses where stripe_id='$stripe_id'"), MYSQLI_ASSOC));
+	if ($quantity == 0) {
+		return deleteSubscription($stripe_id);
+	}
+	
+	if ($quantity != 0 && !isset($stripeUser['subscriptions']['data'][0]['id'])){	// subscription doesn't exist but it should...
+		createSubscription($stripe_id);												// maybe it was canceled on stripe? whatever, create one
+		$stripeUser = getStripeUser($stripe_id);
+	}
+	$subscription = $stripeUser['subscriptions']['data'][0]['id'];
+	
+	$discount = ($quantity - 1) * 2; // two percent discount per added address after the first
+	if ($discount >= 50) $discount = 50; // don't give more than 50% off
+	$coupon = $discount . 'PercentOff';
+	
+	if ($discount) {
+		$fields_string = "quantity=$quantity&coupon=$coupon";
+	} else { // delete the discount
+		$fields_string = "quantity=1";
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_URL, "https://api.stripe.com/v1/subscriptions/$subscription/discount");
+		curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "DELETE");
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($ch, CURLOPT_USERPWD, STRIPE_SK . ':');
+		curl_exec($ch);
+	}
+
+	$ch = curl_init();
+	curl_setopt($ch, CURLOPT_URL, "https://api.stripe.com/v1/subscriptions/$subscription");
+	curl_setopt($ch, CURLOPT_POSTFIELDS, $fields_string);
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+	curl_setopt($ch, CURLOPT_USERPWD, STRIPE_SK . ':');
+
+	$result = curl_exec($ch); //execute post
+	curl_close($ch);
+	return json_decode($result, true);
+}
+
+function deleteSubscription($stripe_id) {
+	$return = null;
+	$user = getStripeUser($stripe_id);
+	foreach($user['subscriptions']['data'] as $subscription){
+		$subscription = $subscription['id'];
+		
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_URL, "https://api.stripe.com/v1/subscriptions/$subscription");
+		curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "DELETE");
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($ch, CURLOPT_USERPWD, STRIPE_SK . ':');
+
+		$result = curl_exec($ch); //execute post
+		curl_close($ch);
+		$return[$subscription] = json_decode($result, true);
+	}
+	return $return;
+}
+
+function createCoupons() {
+
+	for ($discount = 2; $discount <= 50; $discount +=2 ){
+		$coupon = $discount . 'PercentOff';
+		$fields_string = "id=$coupon&duration=forever&percent_off=$discount";
+
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_URL, "https://api.stripe.com/v1/coupons");
+		curl_setopt($ch, CURLOPT_POSTFIELDS, $fields_string);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($ch, CURLOPT_USERPWD, STRIPE_SK . ':');
+
+		$result = curl_exec($ch); //execute post
+		curl_close($ch);
+		$return[$coupon] = json_decode($result, true);
+	}
+	return $return;
+}
+
+function createPlan(){
+	$fields_string = "name=SendSecure_Monthly&amount=999&interval=month&currency=usd&id=ssm&statement_descriptor=SendSecure.org&trial_period_days=30";
+
+	$ch = curl_init();
+	curl_setopt($ch, CURLOPT_URL, "https://api.stripe.com/v1/plans");
+	curl_setopt($ch, CURLOPT_POSTFIELDS, $fields_string);
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+	curl_setopt($ch, CURLOPT_USERPWD, STRIPE_SK . ':');
+
+	$result = curl_exec($ch); //execute post
+	curl_close($ch);
+	return json_decode($result, true);
+}
+
+// this function enables a user (sets active=true in the database)..
+//		if there is a valid subscription in stripe for that user
+// if not, it returns false
+function reEnableUser($email){
+	$user = mysqli_fetch_array(sqlQuery("select * from users where email='$email'"));
+	if ($user['active']) return true;
+	$stripe_id = $user['stripe_id'];
+	$stripeUser = getStripeUser($stripe_id);
+	if (!isset($stripeUser['subscriptions']['data'][0]['status'])){
+		$status = 'canceled';
+	} else {
+		$status = $stripeUser['subscriptions']['data'][0]['status'];
+	}
+	if ($status != 'canceled') {
+		sqlQuery("update users set active = TRUE where email='$email'");
+		return true;
+	} else {
+		return false;
+	}
+}
+
 
 ?>
