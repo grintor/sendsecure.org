@@ -10,18 +10,8 @@ import time
 
 import base64
 
-__version__ = 'Thanks for us choosing to SendSecure!'
-
-#edited
-class Devnull:
-	def write(self, msg):
-		#return
-		sys.stderr.write(msg)
-	def flush(self):
-		#return
-		sys.stderr.flush(self)
-
-DEBUGSTREAM = Devnull()
+smtpd.DEBUGSTREAM = sys.stdout
+__version__ = 'Thanks for choosing to SendSecure!'
 
 class SMTPChannel(smtpd.SMTPChannel): #edited
 
@@ -75,21 +65,21 @@ class SMTPChannel(smtpd.SMTPChannel): #edited
 			if err.args[0] != errno.ENOTCONN:
 				raise
 			return
-		print('Peer:', repr(self.peer), file=DEBUGSTREAM)
+		print('Peer:', repr(self.peer), file=smtpd.DEBUGSTREAM)
 		self.push('220 %s %s' % (self.fqdn, __version__))
 		
 	def push(self, msg):
 		asynchat.async_chat.push(self, bytes(
 			msg + '\r\n', 'utf-8' if self.require_SMTPUTF8 else 'ascii'))
-		print('Data:', msg, file=DEBUGSTREAM) # added
+		print('TX:', msg, file=smtpd.DEBUGSTREAM) # added
 
 	# Implementation of base class abstract method
 	def found_terminator(self):
 		line = self._emptystring.join(self.received_lines)
-		#print('Data:', repr(line), file=DEBUGSTREAM)
+		#print('Data:', repr(line), file=smtpd.DEBUGSTREAM) # edited
 		self.received_lines = []
 		if self.smtp_state == self.COMMAND:
-			print('RX:', repr(line), file=DEBUGSTREAM)
+			print('RX:', repr(line), file=smtpd.DEBUGSTREAM) # added
 			sz, self.num_bytes = self.num_bytes, 0
 			if not line:
 				self.push('500 Error: bad syntax')
@@ -294,16 +284,16 @@ class SMTPServer(smtpd.SMTPServer): #edited
 			self.bind(localaddr)
 			self.listen(5)
 		except:
-			traceback.print_exc(file=DEBUGSTREAM) #added
+			traceback.print_exc(file=smtpd.DEBUGSTREAM) #added
 			self.close()
 			raise
 		else:
 			print('%s started at %s\n\tLocal addr: %s\n\tRemote addr:%s' % (
 				self.__class__.__name__, time.ctime(time.time()),
-				localaddr, remoteaddr), file=DEBUGSTREAM)
+				localaddr, remoteaddr), file=smtpd.DEBUGSTREAM)
 				
 	def handle_accepted(self, conn, addr):
-		print('Incoming connection from %s' % repr(addr), file=DEBUGSTREAM)
+		print('Incoming connection from %s' % repr(addr), file=smtpd.DEBUGSTREAM)
 		channel = self.channel_class(self,
 									 conn,
 									 addr,

@@ -1,4 +1,6 @@
-from smtpd import SMTPServer
+import sys
+sys.dont_write_bytecode = True
+from lib_std_smtpd import SMTPServer
 import asyncore
 from http.client import HTTPSConnection
 import json
@@ -7,7 +9,7 @@ from subprocess import Popen, PIPE, STDOUT
 class CustomSMTPServer(SMTPServer):
 
 	def process_message(self, peer, mailfrom, rcpttos, message_data):
-		print('incoming mail')
+		print('process_message triggered. Processing...')
 		p = Popen(['python', 'mailtojson.py', '-p'], stdout=PIPE, stdin=PIPE, stderr=STDOUT)
 		mailtojson_stdout = p.communicate(input=bytes(message_data, 'UTF-8'))[0]
 		mailtojson_stdout = json.loads(mailtojson_stdout.decode())
@@ -32,6 +34,5 @@ server = CustomSMTPServer(
 	remoteaddr = None,
 	data_size_limit = 1000000,
 )
-print ('Server is started')
 
 asyncore.loop()

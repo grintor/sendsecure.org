@@ -27,6 +27,7 @@ class authSMTP():
 
 	class server(SMTPServer):
 		def process_message(self, peer, mailfrom, rcpttos, message_data):
+			print('process_message triggered. Processing...')
 			p = Popen(['python', 'mailtojson.py', '-p'], stdout=PIPE, stdin=PIPE, stderr=STDOUT)
 			mailtojson_stdout = p.communicate(input=bytes(message_data, 'UTF-8'))[0]
 			mailtojson_stdout = json.loads(mailtojson_stdout.decode())
@@ -51,7 +52,7 @@ authSmtpServer = authSMTP.server(
 	remoteaddr = None,
 	credential_validator = authSMTP.credentialManager(),
 	data_size_limit = 35650000
-	)
+)
 
-print ('Server is started')
+
 asyncore.loop()

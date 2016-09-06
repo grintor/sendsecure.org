@@ -61,9 +61,9 @@ if (!$sqlResult) printJsonError(500 , 'Internal Server Error: Please try later o
 
 $index = 0;
 foreach($message_data['rcpttos'] as $rcptto) {
-	$headers =  'From: "' . $message_data['from'][0]['name'] . '" <do-not-reply@sendsecure.org>' . "\r\n";
+	$headers =  'From: "' . $message_data['from'][0]['name'] . '" <do-not-reply-secure@sendsecure.org>' . "\r\n";
 	$subject = '[SECURE] ' . $message_data['subject'];
-	$message = 'You have a secure message. Click here to read it' . "\r\n" .
+	$message = 'You have a secure message. Visit this URL to read it:' . "\r\n" .
 	'https://www.sendsecure.org/client/read.php?id=' . $uniqid . '&key=' . $key . '&index=' . $index;
 	$additional = "-rbounce-$uniqid@sendsecure.org -ODeliveryMode=background";
 	mail($rcptto, $subject, $message, $headers, $additional);
