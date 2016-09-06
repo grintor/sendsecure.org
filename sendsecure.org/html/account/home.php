@@ -9,6 +9,7 @@ if (!isset($user['subscriptions']['data'][0]['status'])){
 } else {
 	$status = $user['subscriptions']['data'][0]['status'];
 }
+if ($status == 'canceled') $status = 'inactive';
 ?>
 
 <html>

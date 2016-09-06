@@ -1,9 +1,11 @@
 <html>
 <head>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-	<link href="https://cdn.quilljs.com/1.0.0-beta.11/quill.snow.css" rel="stylesheet">
-	<script src="https://cdn.quilljs.com/1.0.0-beta.11/quill.js"></script>
+    <!-- quill version 1.0.0 -->
+	<link href="quill.snow.css" rel="stylesheet">
+	<script src="quill.js"></script>
 	<link rel="stylesheet" type="text/css" href="reply.{$platform}.css" />
+    <script>var _platform = '{$platform}'</script>
 	<script src='moment.min.js'></script>
 	<script src='reply.js'></script>
 </head>

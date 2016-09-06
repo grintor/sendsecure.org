@@ -1,17 +1,27 @@
 var quill = null;
 document.addEventListener('DOMContentLoaded', function() {
-	var toolbarOptions = [
-		[{ 'font': [] }],
-		[{ 'size': ['small', false, 'large', 'huge'] }],	// custom dropdown
-		['bold', 'italic', 'underline', 'strike'],				// toggled buttons
-		[{ 'color': [] }, { 'background': [] }],					// dropdown with defaults from theme
-		[{ 'list': 'ordered'}, { 'list': 'bullet' }],
-		[{ 'align': [] }],
-		['blockquote'],
-		[{ 'indent': '-1'}, { 'indent': '+1' }],					// outdent/indent
-		['link'],
-		['clean']														// remove formatting button
-	];
+    if (_platform == 'desktop') {
+        var toolbarOptions = [
+            [{ 'font': [] }],
+            [{ 'size': ['small', false, 'large', 'huge'] }],	// custom dropdown
+            ['bold', 'italic', 'underline', 'strike'],				// toggled buttons
+            [{ 'color': [] }, { 'background': [] }],					// dropdown with defaults from theme
+            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+            [{ 'align': [] }],
+            ['blockquote'],
+            [{ 'indent': '-1'}, { 'indent': '+1' }],					// outdent/indent
+            ['link'],
+            ['clean']														// remove formatting button
+        ];
+    }
+    if (_platform == 'mobile') {
+        var toolbarOptions = [
+            [{ 'size': ['small', false, 'large', 'huge'] }],	// custom dropdown
+            ['bold', 'italic', 'underline'],				// toggled buttons
+            [{ 'color': [] }],					// dropdown with defaults from theme
+            ['clean']														// remove formatting button
+        ];
+    }
 
 	quill = new Quill('#editor', {
 		modules: {
