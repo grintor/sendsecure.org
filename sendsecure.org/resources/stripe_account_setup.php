@@ -1,5 +1,5 @@
 <?php
-// php -r stripe_account_setup
+// php -f stripe_account_setup.php
 
 
 require_once('SECRET.php');

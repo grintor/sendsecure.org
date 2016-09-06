@@ -28,6 +28,10 @@ if (isset($message_data['message']['html'])) {
 	$message_data['message']['html'] = htmlspecialchars_decode($message_data['message']['html']);
 }
 
+// to avoid undefined-index erros when these don't exist:
+if (!isset($message_data['reply-to'])) $message_data['reply-to'] = [];
+if (!isset($message_data['cc'])) $message_data['cc'] = [];
+
 $sqlResult = sqlQuery(sprintf(
 	"INSERT INTO emails VALUES (
 	UTC_TIMESTAMP,

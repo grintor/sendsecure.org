@@ -10,6 +10,11 @@ $smarty->setCompileDir('/tmp/smarty-templates_c');
 $smarty->setCacheDir('/tmp/smarty-cache');
 $smarty->setTemplateDir('../../resources/smarty-template_dir');
 
+session_start();
+if (!isset($_SESSION[$_GET['id']]) || $_SESSION[$_GET['id']] != 'authorized') {
+	header('Location: authorize.php?' . $_SERVER['QUERY_STRING']);
+}
+
 $emailArr = apiGetMessage($_GET['id'], $_GET['key']);
 
 // get the email address from _rcpttos based on the index

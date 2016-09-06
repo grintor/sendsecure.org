@@ -9,7 +9,7 @@ $smarty->setCacheDir('/tmp/smarty-cache');
 $smarty->setTemplateDir('../../resources/smarty-template_dir');
 
 session_start();
-if ($_SESSION[$_GET['id']] != 'authorized') {
+if (!isset($_SESSION[$_GET['id']]) || $_SESSION[$_GET['id']] != 'authorized') {
 	header('Location: authorize.php?' . $_SERVER['QUERY_STRING']);
 }
 

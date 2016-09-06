@@ -22,14 +22,47 @@ foreach ($incoming_data['message'] as $e){
 	}
 }
 
+foreach ($incoming_data['to'] as $e){
+    if ($e['name'] == $e['email']){
+        $e['name'] = '';
+        $outgoing_data['to'][] = $e;
+    } else {
+        $outgoing_data['to'][] = $e;
+    }
+}
+
+foreach ($incoming_data['cc'] as $e){
+    if ($e['name'] == $e['email']){
+        $e['name'] = '';
+        $outgoing_data['cc'][] = $e;
+    } else {
+        $outgoing_data['cc'][] = $e;
+    }
+}
+
+foreach ($incoming_data['reply-to'] as $e){
+    if ($e['name'] == $e['email']){
+        $e['name'] = '';
+        $outgoing_data['reply-to'][] = $e;
+    } else {
+        $outgoing_data['reply-to'][] = $e;
+    }
+}
+
+foreach ($incoming_data['from'] as $e){
+    if ($e['name'] == $e['email']){
+        $e['name'] = '';
+        $outgoing_data['from'][] = $e;
+    } else {
+        $outgoing_data['from'][] = $e;
+    }
+}
+
+
 $outgoing_data['datetime'] 		= $incoming_data['datetime'];
 $outgoing_data['rcpttos'] 		= $incoming_data['rcpttos'];
 $outgoing_data['subject'] 		= $incoming_data['subject'];
 $outgoing_data['headers'] 		= $incoming_data['headers'];
-$outgoing_data['from'] 			= $incoming_data['from'];
-$outgoing_data['to'] 			= $incoming_data['to'];
-$outgoing_data['reply-to'] 		= $incoming_data['reply-to'];
-$outgoing_data['cc'] 			= $incoming_data['cc'];
 $outgoing_data['attachments'] 	= $incoming_data['attachments'];
 
 $outgoing_data = json_encode($outgoing_data);

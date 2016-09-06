@@ -56,12 +56,16 @@ function indexToAddress($index, $emailArr){
 			$address['name']=$t['name'];
 		}
 	}
-	// also try looking for the name in _cc
-	foreach($emailArr['cc'] as $t) {
-		if ($t['email']==$address['email']){
-			$address['name']=$t['name'];
-		}
-	}
+	// also try looking for the name in _cc (if there are cc's)
+    if (isset($emailArr['cc'])) {
+        foreach($emailArr['cc'] as $t) {
+            if ($t['email']==$address['email']){
+                $address['name']=$t['name'];
+            }
+        }
+    }
+    // fallback to just using the email prefix for the name
+    $address['name'] = explode('@', $address['email'])[0];
 	return $address;
 }
 
