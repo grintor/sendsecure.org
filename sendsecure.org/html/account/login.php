@@ -1,6 +1,7 @@
 <?php
 	require_once('../../resources/sqliConnect.php');
 	session_start();
+	$notify = null;
 	if (isset($_POST['submit'])){
 		sleep(1);	// mitigate brute-force attack
 		$email = strtolower($_POST['email']);
@@ -14,7 +15,6 @@
 		}
 	} else {
 		$_POST['email'] = null;
-		$notify = null;
 	}
 ?>
 

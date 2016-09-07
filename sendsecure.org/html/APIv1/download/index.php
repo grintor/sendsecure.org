@@ -17,7 +17,7 @@ if (!$sqlResult = $mysqli->query($sqlRequest)) {
     exit;
 }
 
-$sqlResult = mysqli_fetch_array($sqlResult, MYSQL_ASSOC);
+$sqlResult = mysqli_fetch_assoc($sqlResult);
 
 $attachments = json_decode($sqlResult['_attachments'], true);
 

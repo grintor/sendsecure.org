@@ -1,6 +1,7 @@
 <?php
 	require_once('../../resources/sqliConnect.php');
 	require_once('../../resources/functions.php');
+	$notify = null;
 	if (!$_GET["email"] || !$_GET["userkey"]) {	// if they are missing any info...
 		header("Location: index.php"); 				// they shouldn't be here, show them the homepage
 	} else {
@@ -34,8 +35,6 @@
 			sqlQuery("update users set password='$DBpassword', userkey='$DBuserkey' where email='$DBemail'", false);
 			header('Location: login.php'); // success, now go to login page
 		} while (0);
-	} else {
-		$notify = null;
 	}
 ?>
 

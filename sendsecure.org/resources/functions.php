@@ -65,7 +65,9 @@ function indexToAddress($index, $emailArr){
         }
     }
     // fallback to just using the email prefix for the name
-    $address['name'] = explode('@', $address['email'])[0];
+	if (!$address['name']) {
+		$address['name'] = explode('@', $address['email'])[0];
+	}
 	return $address;
 }
 
