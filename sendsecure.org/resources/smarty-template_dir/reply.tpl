@@ -25,7 +25,7 @@
 			<span id='print-page'><a href="#" onclick='window.print()'>Print This Page</a></span>
 			<span id='add-attach'><a href="#" onclick="addAttach()">Add Attachment</a></span>
 			<span id='remove-attach'><a href="#" onclick="removeAttach()">Remove Attachments</a></span>
-			<span><a href="#" onclick="send();">Send</a></span>
+			<span id='sendButton'><a href="#" onclick="send();" style="color:red;">Send</a></span>
 		</p>
 		{/strip}
 	</div>

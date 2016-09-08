@@ -74,6 +74,7 @@ function send(){
 	node = document.createElement('input');
 	node.type = 'hidden';
 	node.name = 'message';
+    document.getElementById('sendButton').innerHTML = '<font color="green">Sending...</font>';
 	node.value = htmlspecialchars(document.getElementById('editor').firstChild.innerHTML);
 	document.forms[0].appendChild(node);
 	document.forms[0].submit();
