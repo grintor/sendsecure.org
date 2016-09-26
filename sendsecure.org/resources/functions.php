@@ -99,7 +99,7 @@ function registerWithStripe($userArr) {
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 	curl_setopt($ch, CURLOPT_USERPWD, STRIPE_SK . ':');
 
-	$result = curl_exec($ch); //execute post
+	$result = curl_exec($ch); //execute POST
 	curl_close($ch);
 	$result = json_decode($result, true);
 	
@@ -114,7 +114,7 @@ function getStripeUser($stripe_id) {
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 	curl_setopt($ch, CURLOPT_USERPWD, STRIPE_SK . ':');
 
-	$result = curl_exec($ch); //execute post
+	$result = curl_exec($ch); //execute GET
 	curl_close($ch);
 	return json_decode($result, true);
 }
@@ -129,7 +129,7 @@ function updateCard($stripe_id, $number, $exp_month, $exp_year, $cvc) {
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 	curl_setopt($ch, CURLOPT_USERPWD, STRIPE_SK . ':');
 
-	$result = curl_exec($ch); //execute post
+	$result = curl_exec($ch); //execute POST
 	curl_close($ch);
 	return json_decode($result, true);
 }
@@ -147,7 +147,7 @@ function deleteCard($stripe_id) {
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 	curl_setopt($ch, CURLOPT_USERPWD, STRIPE_SK . ':');
 
-	$result = curl_exec($ch); //execute post
+	$result = curl_exec($ch); //execute DELETE
 	curl_close($ch);
 	return json_decode($result, true);
 }
@@ -181,8 +181,10 @@ function subtractSubscription($stripe_id, $subscriptionID) {
 	updateSubscription($stripe_id);
 }
 
-function createSubscription($stripe_id) {
-	$fields_string = "plan=ssm&customer=$stripe_id";
+function createSubscription($stripe_id, $trial_days = 14) {
+	$trial_end = time() + ($trial_days * 24 * 60 * 60);
+	if ($trial_days == 0) {$trial_end = 'now';}
+	$fields_string = "plan=ssm&customer=$stripe_id&trial_end=$trial_end";
 
 	$ch = curl_init();
 	curl_setopt($ch, CURLOPT_URL, "https://api.stripe.com/v1/subscriptions");
@@ -190,7 +192,7 @@ function createSubscription($stripe_id) {
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 	curl_setopt($ch, CURLOPT_USERPWD, STRIPE_SK . ':');
 
-	$result = curl_exec($ch); //execute post
+	$result = curl_exec($ch); //execute POST
 	curl_close($ch);
 	
 	return json_decode($result, true);
@@ -207,8 +209,8 @@ function updateSubscription($stripe_id) {
 	}
 	
 	if ($quantity != 0 && !isset($stripeUser['subscriptions']['data'][0]['id'])){	// subscription doesn't exist but it should...
-		createSubscription($stripe_id);												// maybe it was canceled on stripe? whatever, create one
-		$stripeUser = getStripeUser($stripe_id);
+		createSubscription($stripe_id, 0);											// maybe it was canceled on stripe? whatever, create one.
+		$stripeUser = getStripeUser($stripe_id);									// no trial!
 	}
 	$subscription = $stripeUser['subscriptions']['data'][0]['id'];
 	
@@ -234,7 +236,7 @@ function updateSubscription($stripe_id) {
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 	curl_setopt($ch, CURLOPT_USERPWD, STRIPE_SK . ':');
 
-	$result = curl_exec($ch); //execute post
+	$result = curl_exec($ch); //execute GET
 	curl_close($ch);
 	return json_decode($result, true);
 }
@@ -251,20 +253,24 @@ function deleteSubscription($stripe_id) {
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 		curl_setopt($ch, CURLOPT_USERPWD, STRIPE_SK . ':');
 
-		$result = curl_exec($ch); //execute post
+		$result = curl_exec($ch); //execute DELETE
 		curl_close($ch);
 		$return[$subscription] = json_decode($result, true);
 	}
 	return $return;
 }
 
-// this function enables a user (sets active=true in the database)..
-//		if there is a valid subscription in stripe for that user
+// this function enables a user (sets active=true in the database) if there is a valid subscription in stripe
 // if not, it returns false
+// also attempts to charge any unpaid invoices so that the user in reactivated in stripe if past_due
 function reEnableUser($email){
 	$user = mysqli_fetch_array(sqlQuery("select * from users where email='$email'"));
 	if ($user['active']) return true;
 	$stripe_id = $user['stripe_id'];
+	
+	payAnyUnpaidInvoices($stripe_id);
+	updateSubscription($stripe_id);
+	
 	$stripeUser = getStripeUser($stripe_id);
 	if (!isset($stripeUser['subscriptions']['data'][0]['status'])){
 		$status = 'canceled';
@@ -276,6 +282,45 @@ function reEnableUser($email){
 		return true;
 	} else {
 		return false;
+	}
+}
+
+// retrieve last invoice. If it is unpaid; pay it.
+function payAnyUnpaidInvoices($stripe_id) {
+	
+	$ch = curl_init();
+	curl_setopt($ch, CURLOPT_URL, "https://api.stripe.com/v1/invoices?customer=$stripe_id&limit=1");
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+	curl_setopt($ch, CURLOPT_USERPWD, STRIPE_SK . ':');
+	$lastInvoice = curl_exec($ch); //execute GET
+
+	curl_close($ch);
+	$lastInvoice = json_decode($lastInvoice, true);
+	error_log(print_r($lastInvoice, true));
+	if (!$lastInvoice['data'][0]['paid']) { // if it is an unpaid invoice
+		$lastInvoiceID=$lastInvoice['data'][0]['id'];
+
+		if ($lastInvoice['data'][0]['closed']) { // if the invoice is closed, we need to reopen it
+			$fields_string = "closed=false";
+			$ch = curl_init();
+			curl_setopt($ch, CURLOPT_URL, "https://api.stripe.com/v1/invoices/$lastInvoiceID");
+			curl_setopt($ch, CURLOPT_POSTFIELDS, $fields_string);
+			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+			curl_setopt($ch, CURLOPT_USERPWD, STRIPE_SK . ':');
+			error_log(curl_exec($ch)); //execute POST
+
+			curl_close($ch);
+		}
+
+		// charge the invoice
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_URL, "https://api.stripe.com/v1/invoices/$lastInvoiceID/pay");
+		curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($ch, CURLOPT_USERPWD, STRIPE_SK . ':');
+		error_log(curl_exec($ch)); //execute POST
+
+		curl_close($ch);
 	}
 }
 
