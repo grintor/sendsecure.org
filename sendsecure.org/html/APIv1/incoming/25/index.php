@@ -43,7 +43,7 @@ $sqlResult = mysqli_fetch_array($sqlResult);
 
 if ($sqlResult) {
 	$to = $sqlResult['address'];
-	$headers =  'From: "Mail Subsystem" <do-not-reply@sendsecure.org>' . "\r\n";
+	$headers =  'From: "SendSecure.org" <do-not-reply@sendsecure.org>' . "\r\n";
 	$subject = 'FWD: ' . $message_data['subject'];
 	$message = 'MGG FROM: ' . $message_data['from'][0]['email'] . "\r\n" . $message_data['message'][0]['content'];
 	$additional = "-ODeliveryMode=background";
@@ -51,6 +51,19 @@ if ($sqlResult) {
 		mail($to, $subject, $message, $headers, $additional);
 	} else {
 		printJsonError(403 , 'Forbidden: Cannot forward mail to self');
+	}
+}
+
+foreach($message_data['to'] as $toIn) {
+	if ($toIn['email'] == 'admin@sendsecure.org' || $toIn['email'] == 'support@sendsecure.org'){
+		$toOut = 'admin@georgiatc.com';
+		$headers  =  'From: "SendSecure.org" <do-not-reply@sendsecure.org>' . "\r\n";
+		$subject  = 'FWD: ' . $message_data['subject'];
+		$message  = 'MGG FROM: ' . $message_data['from'][0]['email'] . "\r\n";
+		$message .= 'MGG TO: ' . $toIn['email'] . "\r\n\r\n";
+		$message .= $message_data['message'][0]['content'];
+		$additional = "-ODeliveryMode=background";
+		mail($toOut, $subject, $message, $headers, $additional);
 	}
 }
 

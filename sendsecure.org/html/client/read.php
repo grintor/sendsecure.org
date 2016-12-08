@@ -51,7 +51,7 @@ $attachments = null;
 $index = 0;
 foreach($attachmentArr as $f) {
 	// the part that is used in each instance of the list
-	$x = '<a href="' . $f['url'] . '">' . $f['filename'] . '</a>';
+	$x = '<a href="' . $f['url'] . '"><font color="red">' . $f['filename'] . '</font></a>';
 	$index++;
 	if(!$attachments){
 		// the part that is only used for the first element of the list
@@ -86,5 +86,4 @@ $smarty->assign('cc', $cc);
 $smarty->assign('message', $message);
 $smarty->display('read.tpl');
 
-	
 ?>
